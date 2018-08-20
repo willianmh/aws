@@ -1,0 +1,11 @@
+[2018-08-10 14:46:23,199] INFO     Starting the instance deployment from the template "../instances/c1.medium.json"
+[2018-08-10 14:46:25,884] INFO     Instance deployed! Instance id: i-0a2c2ac6696c9865b
+[2018-08-10 14:46:25,884] INFO     [ec2.Instance(id='i-0a2c2ac6696c9865b')]
+[2018-08-15 11:58:47,384] INFO     Starting the instance deployment from the template "../instances/c1.medium.json"
+[2018-08-15 11:58:50,163] INFO     Instance deployed! Instance id: i-06355aacf84d7ec5d
+[2018-08-15 11:58:50,163] INFO     [ec2.Instance(id='i-06355aacf84d7ec5d')]
+[2018-08-15 12:00:26,272] INFO     Starting the cluster deployment from the template "../instances/c1.medium.json"
+[2018-08-15 12:13:57,472] INFO     Starting the cluster deployment from the template "../instances/c5.large.json"
+[2018-08-15 12:20:05,710] INFO     Starting the cluster deployment from the template "../instances/c5.large.json"
+[2018-08-15 12:20:08,825] INFO     Instance deployed! Instance id: i-04142ad7350a90406
+[2018-08-15 12:20:08,825] INFO     [ec2.Instance(id='i-04142ad7350a90406'), ec2.Instance(id='i-04432da5d235dde1a'), ec2.Instance(id='i-0b60bfa09cfc8fc52')]

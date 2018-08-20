@@ -3,7 +3,9 @@
 import boto3
 import sys
 import json
-import logging
+import argparse
+
+from aux_functions import getLogger
 
 # aws ec2 run-instances --cli-input-json file://ec2runinst.json
 
@@ -32,45 +34,57 @@ import logging
 # Access machine with a command like: ssh -i <your_key>.pem ubuntu@<Public DNS (IPv4)>
 
 
-def getLogger(name):
-    # Logging configuration
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
-    # Log formatter
-    formatter = logging.Formatter("[%(asctime)s] %(levelname)-8s %(message)s")
-    # Log File handler
-    handler = logging.FileHandler("create_instance.log")
-    handler.setLevel(logging.INFO)
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    # Screen handler
-    screenHandler = logging.StreamHandler(stream=sys.stdout)
-    screenHandler.setLevel(logging.INFO)
-    screenHandler.setFormatter(formatter)
-    logger.addHandler(screenHandler)
-    return logger
-
-
 def main():
     user_data = """#!/bin/bash
 """
 
-    # Access the execution of user_data: cat /var/log/cloud-init-output.log
-    # Access the user script: /var/lib/cloud/instance/scripts/.
+    parser = argparse.ArgumentParser()
+    # create arguments
+    parser.add_argument('-n', action='store', dest='number_machines',
+                        help='Select number machines to instanciate')
+    parser.add_argument('-i', action='store', dest='instance',
+                        help='Select instance type')
 
-    # b64_user_data = str(base64.b64encode(data_user))
+    results = parser.parse_args()
 
-    if len(sys.argv) <= 1:
-        logger.error('Please insert the json path as the first parameter! Terminating...')
+    if results.number_machines:
+        number_machines = results.number_machines
+    else:
+        number_machines = 1
+
+    if results.instance:
+        instance = results.instance
+    else:
+        logger.error(logger.error('Please insert the json path as the first parameter! Terminating...'))
         return
-    logger.info('Starting the instance deployment from the template "'+sys.argv[1]+'"')
-    # Opening json with definitions from the first argument
-    machine_definitions = json.load(open(sys.argv[1], 'r'))
-    machine_definitions['UserData'] = user_data
+
+    logger.info('Starting the cluster deployment from the template "' + instance + '"')
+
     # Initialize the ec2 object
     ec2 = boto3.resource('ec2', region_name='us-east-1')
     # Initialize the ec2 client object
     client = boto3.client('ec2')
+
+    placement_groups = list(ec2.placement_groups.all())
+
+    not_exist = True
+    if len(placement_groups):
+        for placement_group in placement_groups:
+            if placement_group.group_name == '501st':
+                not_exist = False
+
+    if not_exist:
+        response = client.create_placement_group(
+            GroupName='501st',
+            Strategy='cluster'
+        )
+
+    # Opening json with definitions from the first argument
+    machine_definitions = json.load(open(instance, 'r'))
+    machine_definitions['UserData'] = user_data
+
+    machine_definitions['Placement']['GroupName'] = '501st'
+    machine_definitions['MaxCount'] = number_machines
     # This will explode the dictionary to become the parameters:
     # "{i:20,j:30}" will become (i=20,j=30) and create instances
     # according to the json file

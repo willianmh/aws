@@ -9,3 +9,14 @@
 [2018-08-15 12:20:05,710] INFO     Starting the cluster deployment from the template "../instances/c5.large.json"
 [2018-08-15 12:20:08,825] INFO     Instance deployed! Instance id: i-04142ad7350a90406
 [2018-08-15 12:20:08,825] INFO     [ec2.Instance(id='i-04142ad7350a90406'), ec2.Instance(id='i-04432da5d235dde1a'), ec2.Instance(id='i-0b60bfa09cfc8fc52')]
+[2018-09-10 20:22:00,659] INFO     Starting the instance deployment from the template "../instances/t2.micro.json"
+[2018-09-10 20:22:02,857] INFO     Instance deployed! Instance id: i-02554cf8f7ea7af74
+[2018-09-10 20:22:02,857] INFO     [ec2.Instance(id='i-02554cf8f7ea7af74')]
+[2018-09-10 20:22:51,071] INFO     Starting the instance deployment from the template "../instances/t2.micro.json"
+[2018-09-10 20:22:52,855] INFO     Instance deployed! Instance id: i-0f68e8790a9d8b5ed
+[2018-09-10 20:22:52,855] INFO     [ec2.Instance(id='i-0f68e8790a9d8b5ed')]
+[2018-09-11 13:09:24,227] INFO     Starting the instance deployment from the template "../instances/t2.micro.json"
+[2018-09-11 13:17:51,327] INFO     Starting the instance deployment from the template "../instances/t2.micro.json"
+[2018-09-11 13:20:02,018] INFO     Starting the instance deployment from the template "../instances/t2.micro.json"
+[2018-09-11 13:20:04,224] INFO     Instance deployed! Instance id: i-0e1c65cd2a25479b7
+[2018-09-11 13:20:04,224] INFO     [ec2.Instance(id='i-0e1c65cd2a25479b7'), ec2.Instance(id='i-00b924d70386de5c9'), ec2.Instance(id='i-06b248dca3143a50a'), ec2.Instance(id='i-0dc5dc6ee38945fce')]

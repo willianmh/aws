@@ -6,7 +6,7 @@
     "BlockDeviceMappings": [
         {
             "DeviceName": "/dev/sda1",
-            "VirtualName": "eth0",
+            "VirtualName": "eth0lial",
             "Ebs": {
                 "VolumeSize": 20,
                 "DeleteOnTermination": true,
@@ -16,12 +16,12 @@
         }
     ],
     "ImageId": "ami-0ec6192b8b6c593b9",
-    "MaxCount": 1,
-    "MinCount": 1,
+    "MaxCount": 4,
+    "MinCount": 4,
     "InstanceType": "t2.micro",
     "KeyName": "willkey",
-    "SecurityGroupIds": ["sg-02f4ea97d74f5e263"],
-    "SubnetId": "subnet-0fc78340b0af1017d",
+    "SecurityGroupIds": ["sg-09bdec97b2c3a254c"],
+    "SubnetId": "subnet-01cb22bf76f1a3db7",
     "Monitoring": {
         "Enabled": false
     },

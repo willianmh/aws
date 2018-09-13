@@ -33,6 +33,15 @@ from aux_functions import getLogger
 
 # Access machine with a command like: ssh -i <your_key>.pem ubuntu@<Public DNS (IPv4)>
 
+# General purpose: M4, M5, M5d
+#
+# Compute optimized: C3, C4, C5, C5d, cc2.8xlarge
+#
+# Memory optimized: cr1.8xlarge, R3, R4, R5, R5d, X1, X1e, z1d
+#
+# Storage optimized: D2, H1, hs1.8xlarge, I2, I3, i3.metal
+#
+# Accelerated computing: F1, G2, G3, P2, P3
 
 def main():
     user_data = """#!/bin/bash

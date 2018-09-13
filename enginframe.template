@@ -1,0 +1,1876 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "NICE EnginFrame",
+  "Parameters": {
+    "DomainAdminPassword": {
+      "Description": "Password for the domain admin user. Must be at least 8 characters with at least three of these attributes: lowercase, uppercase, number and symbols",
+      "Type": "String",
+      "MinLength": "8",
+      "MaxLength": "32",
+      "AllowedPattern": "(?=^.{8,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*",
+      "NoEcho": "true"
+    },
+    "EnginFrameAdminPassword": {
+      "Description": "Password for the EnginFrame admin user. Must be at least 8 characters with at least three of these attributes: lowercase, uppercase, number and symbols",
+      "Type": "String",
+      "MinLength": "8",
+      "MaxLength": "32",
+      "AllowedPattern": "(?=^.{8,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*",
+      "NoEcho": "true"
+    },
+    "AccessFromCidr": {
+      "Description": "Lockdown SSH and HTTPS access (default can be accessed from anywhere)",
+      "Type": "String",
+      "Default": "0.0.0.0/0",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x."
+    },
+    "CfnClusterKeyName": {
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances using the default cluster user.",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "Default": "salvotest",
+      "MinLength": "1",
+      "ConstraintDescription": "must be a valid key name"
+    },
+    "CfnClusterMasterInstanceType": {
+      "Description": "MasterServer EC2 instance type",
+      "Type": "String",
+      "Default": "m4.large",
+      "ConstraintDescription": "Must be a valid EC2 instance type, with support for HVM.",
+      "AllowedValues": [
+        "m4.large",
+        "m4.xlarge",
+        "m4.2xlarge",
+        "m4.4xlarge",
+        "m4.10xlarge",
+        "m4.16xlarge",
+        "c4.xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge"
+      ]
+    },
+    "CfnClusterComputeInstanceType": {
+      "Description": "ComputeFleet EC2 instance type",
+      "Type": "String",
+      "Default": "m4.large",
+      "ConstraintDescription": "Must be a valid EC2 instance type, with support for HVM.",
+      "AllowedValues": [
+        "m4.large",
+        "m4.xlarge",
+        "m4.2xlarge",
+        "m4.4xlarge",
+        "m4.10xlarge",
+        "m4.16xlarge",
+        "c3.xlarge",
+        "c3.2xlarge",
+        "c3.4xlarge",
+        "c3.8xlarge",
+        "c4.xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge"
+      ]
+    },
+    "CfnClusterInitialQueueSize": {
+      "Description": "Initial number of EC2 instances to launch as compute nodes within the cluster. MinValue=0, MaxValue=32",
+      "Type": "Number",
+      "Default": "2",
+      "MinValue" : "0",
+      "MaxValue" : "32",
+      "ConstraintDescription": "Must be a positive integer between 0 and 32."
+    },
+    "CfnClusterMaxQueueSize": {
+      "Description": "Maximum number of EC2 compute instances that can be launched in the cluster. MinValue=0, MaxValue=32",
+      "Type": "Number",
+      "Default": "10",
+      "MinValue" : "0",
+      "MaxValue" : "32",
+      "ConstraintDescription": "Must be a positive integer between 0 and 32."
+    },
+    "CfnClusterMaintainInitialSize": {
+      "Description": "Boolean flag to set autoscaling group to maintain initial size and scale back",
+      "Type": "String",
+      "Default": "false",
+      "ConstraintDescription": "true/false",
+      "AllowedValues": [
+        "true",
+        "false"
+      ]
+    },
+    "CfnClusterScheduler": {
+      "Description": "Cluster scheduler",
+      "Type": "String",
+      "Default": "slurm",
+      "ConstraintDescription": "Must be a supported scheduler",
+      "AllowedValues": [
+        "sge",
+        "slurm",
+        "torque"
+      ]
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Network Configuration"
+          },
+          "Parameters": [
+            "AccessFromCidr"
+          ]
+        },
+        {
+          "Label": {
+            "default": "User Directory Configuration"
+          },
+          "Parameters": [
+            "DomainAdminPassword"
+          ]
+        },
+        {
+          "Label": {
+            "default": "EnginFrame Configuration"
+          },
+          "Parameters": [
+            "EnginFrameAdminPassword"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Cluster Configuration"
+          },
+          "Parameters": [
+            "CfnClusterKeyName",
+            "CfnClusterMasterInstanceType",
+            "CfnClusterComputeInstanceType",
+            "CfnClusterInitialQueueSize",
+            "CfnClusterMaxQueueSize",
+            "CfnClusterMaintainInitialSize",
+            "CfnClusterScheduler"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "AccessFromCidr": {
+          "default": "Access From"
+        },
+        "DomainAdminPassword": {
+          "default": "Domain Admin Password"
+        },
+        "EnginFrameAdminPassword": {
+          "default": "EnginFrame Admin Password"
+        },
+        "CfnClusterKeyName": {
+          "default": "Key Pair Name"
+        },
+        "CfnClusterMasterInstanceType": {
+          "default": "Master Instance Type"
+        },
+        "CfnClusterComputeInstanceType": {
+          "default": "Compute Instance Type"
+        },
+        "CfnClusterInitialQueueSize": {
+          "default": "Initial Cluster Size"
+        },
+        "CfnClusterMaxQueueSize": {
+          "default": "Maximum Cluster Size"
+        },
+        "CfnClusterMaintainInitialSize": {
+          "default": "Maintain Initial Size"
+        },
+        "CfnClusterScheduler": {
+          "default": "Job Scheduler"
+        }
+      }
+    }
+  },
+  "Mappings": {
+    "Conf": {
+      "Misc": {
+        "Debug": "false"
+      },
+      "Network": {
+        "VpcCidrBlock": "10.0.0.0/16",
+        "Subnet0CidrBlock": "10.0.0.0/24",
+        "Subnet1CidrBlock": "10.0.1.0/24",
+        "Subnet2CidrBlock": "10.0.2.0/24",
+        "Subnet3CidrBlock": "10.0.3.0/24",
+        "Subnet4CidrBlock": "10.0.4.0/24"
+      },
+      "Directory": {
+        "DomainDNSName": "enginframe.domain"
+      },
+      "EnginFrame": {
+        "Version": "2017.1-r287",
+        "BucketBasename": "nice-enginframe"
+      },
+      "CfnCluster": {
+        "Version": "1.3.2"
+      }
+    },
+    "AZonesByRegion": {
+      "ap-northeast-1": {"Total": "3"},
+      "ap-northeast-2": {"Total": "2"},
+      "ap-south-1": {"Total": "2"},
+      "ap-southeast-1": {"Total": "2"},
+      "ap-southeast-2": {"Total": "3"},
+      "ca-central-1": {"Total": "2"},
+      "eu-central-1": {"Total": "2"},
+      "eu-west-1": {"Total": "3"},
+      "eu-west-2": {"Total": "2"},
+      "sa-east-1": {"Total": "3"},
+      "us-east-1": {"Total": "5"},
+      "us-east-2": {"Total": "3"},
+      "us-west-1": {"Total": "3"},
+      "us-west-2": {"Total": "3"}
+    }
+  },
+  "Conditions": {
+    "NVirginia": {"Fn::Equals": [{"Ref": "AWS::Region"},"us-east-1"]},
+    "CreateSubnet0": {"Fn::Or": [{"Condition": "CreateSubnet1"}, {"Fn::Equals": [{"Fn::FindInMap": ["AZonesByRegion", {"Ref": "AWS::Region"}, "Total"]}, "1"]}]},
+    "CreateSubnet1": {"Fn::Or": [{"Condition": "CreateSubnet2"}, {"Fn::Equals": [{"Fn::FindInMap": ["AZonesByRegion", {"Ref": "AWS::Region"}, "Total"]}, "2"]}]},
+    "CreateSubnet2": {"Fn::Or": [{"Condition": "CreateSubnet3"}, {"Fn::Equals": [{"Fn::FindInMap": ["AZonesByRegion", {"Ref": "AWS::Region"}, "Total"]}, "3"]}]},
+    "CreateSubnet3": {"Fn::Or": [{"Condition": "CreateSubnet4"}, {"Fn::Equals": [{"Fn::FindInMap": ["AZonesByRegion", {"Ref": "AWS::Region"}, "Total"]}, "4"]}]},
+    "CreateSubnet4": {"Fn::Equals": [{"Fn::FindInMap": ["AZonesByRegion", {"Ref": "AWS::Region"}, "Total"]}, "5"]},
+    "is-EFS-available": {"Fn::Or": [
+      {"Fn::Equals": [{"Ref": "AWS::Region"}, "ap-southeast-2"]},
+      {"Fn::Equals": [{"Ref": "AWS::Region"}, "eu-central-1"]},
+      {"Fn::Equals": [{"Ref": "AWS::Region"}, "eu-west-1"]},
+      {"Fn::Equals": [{"Ref": "AWS::Region"}, "us-east-1"]},
+      {"Fn::Equals": [{"Ref": "AWS::Region"}, "us-east-2"]},
+      {"Fn::Equals": [{"Ref": "AWS::Region"}, "us-west-2"]}
+    ]},
+    "is-DS-available": {"Fn::Or": [
+      {"Fn::Equals": [{"Ref": "AWS::Region"}, "ap-northeast-1"]},
+      {"Fn::Equals": [{"Ref": "AWS::Region"}, "ap-southeast-1"]},
+      {"Fn::Equals": [{"Ref": "AWS::Region"}, "ap-southeast-2"]},
+      {"Fn::Equals": [{"Ref": "AWS::Region"}, "eu-west-1"]},
+      {"Fn::Equals": [{"Ref": "AWS::Region"}, "us-east-1"]},
+      {"Fn::Equals": [{"Ref": "AWS::Region"}, "us-west-2"]}
+    ]},
+    "are-EFS-and-DS-available": {"Fn::And": [{"Condition": "is-EFS-available"},{"Condition": "is-DS-available"}]},
+    "is-Debug-enabled": {"Fn::Equals": [{"Fn::FindInMap": ["Conf","Misc","Debug"]},"true"]}
+  },
+  "Resources": {
+    "CfnClusterRole": {
+      "Type": "AWS::IAM::Role",
+      "DependsOn": [
+        "CleanupCertificate"
+      ],
+      "Properties": {
+        "Path": "/",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "CfnClusterInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "CfnClusterRole"
+          }
+        ]
+      }
+    },
+    "CfnClusterInstancePolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "CfnClusterRole"
+          }
+        ],
+        "PolicyName": "CfnClusterInstancePolicy",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "EC2",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Action": [
+                "ec2:AttachVolume",
+                "ec2:DescribeInstanceAttribute",
+                "ec2:DescribeInstanceStatus",
+                "ec2:DescribeInstances"
+              ]
+            },
+            {
+              "Sid": "DynamoDBList",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Action": [
+                "dynamodb:ListTables"
+              ]
+            },
+            {
+              "Sid": "SQSQueue",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueUrl"
+              ]
+            },
+            {
+              "Sid": "Autoscaling",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Action": [
+                "autoscaling:DescribeAutoScalingGroups",
+                "autoscaling:TerminateInstanceInAutoScalingGroup",
+                "autoscaling:SetDesiredCapacity"
+              ]
+            },
+            {
+              "Sid": "CloudWatch",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Action": [
+                "cloudwatch:PutMetricData"
+              ]
+            },
+            {
+              "Sid": "DynamoDBTable",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Action": [
+                "dynamodb:PutItem",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable"
+              ]
+            },
+            {
+              "Sid": "SQSList",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Action": [
+                "sqs:ListQueues"
+              ]
+            },
+            {
+              "Sid": "CloudWatchLogs",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Action": [
+                "logs:*"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "CfnClusterExtendedPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "CfnClusterRole"
+          }
+        ],
+        "PolicyName": "CfnClusterExtendedPolicy",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "s3",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Sub": [
+                    "arn:aws:s3:::${BucketBasename}-${Region}/${Version}/*",
+                    {
+                      "BucketBasename": {
+                        "Fn::FindInMap": [
+                          "Conf",
+                          "EnginFrame",
+                          "BucketBasename"
+                        ]
+                      },
+                      "Region": {
+                        "Ref": "AWS::Region"
+                      },
+                      "Version": {
+                        "Fn::FindInMap": [
+                          "Conf",
+                          "EnginFrame",
+                          "Version"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ],
+              "Action": [
+                "s3:GetObject"
+              ]
+            },
+            {
+              "Sid": "cloudformation",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Sub": "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}/*"
+                },
+                {
+                  "Fn::Sub": "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}-DefaultCluster-*/*"
+                },
+                {
+                  "Fn::Sub": "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/cfncluster-*/*"
+                }
+              ],
+              "Action": [
+                "cloudformation:DescribeStacks",
+                "cloudformation:DescribeStackResource",
+                "cloudformation:DescribeStackResources"
+              ]
+            },
+            {
+              "Sid": "elb",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Action": [
+                "elasticloadbalancing:RegisterTargets",
+                "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+                "elasticloadbalancing:DescribeLoadBalancers",
+                "elasticloadbalancing:CreateTargetGroup",
+                "elasticloadbalancing:CreateRule",
+                "elasticloadbalancing:DescribeRules",
+                "elasticloadbalancing:DescribeListeners",
+                "elasticloadbalancing:AddTags"
+              ]
+            },
+            {
+              "Sid": "ec2",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Action": [
+                "ec2:DescribeVpcs",
+                "ec2:DescribeSubnets"
+              ]
+            },
+            {
+              "Sid": "kms",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Action": [
+                "kms:Decrypt"
+              ]
+            },
+            {
+              "Sid": "iam",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "CfnClusterRole",
+                    "Arn"
+                  ]
+                }
+              ],
+              "Action": [
+                "iam:GetRole",
+                "iam:PutRolePolicy"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "MasterKey": {
+      "Type": "AWS::KMS::Key",
+      "Properties": {
+        "Description": {
+          "Fn::Sub": "Password Encryption Key for ${AWS::StackName}"
+        },
+        "KeyPolicy": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Enable IAM User Permissions",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": [
+                  {
+                    "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
+                  }
+                ]
+              },
+              "Action": "kms:*",
+              "Resource": "*"
+            },
+            {
+              "Sid": "Allow use of the key",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": [
+                  {
+                    "Fn::GetAtt": [
+                      "CfnClusterRole",
+                      "Arn"
+                    ]
+                  }
+                ]
+              },
+              "Action": [
+                "kms:Decrypt"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    },
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "true",
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "Conf",
+            "Network",
+            "VpcCidrBlock"
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-VPC"
+            }
+          },
+          {
+            "Key": "NICE:EnginFrame:Version",
+            "Value": {
+              "Fn::FindInMap": [
+                "Conf",
+                "EnginFrame",
+                "Version"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "InternetGateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-InternetGateway"
+            }
+          },
+          {
+            "Key": "NICE:EnginFrame:Version",
+            "Value": {
+              "Fn::FindInMap": [
+                "Conf",
+                "EnginFrame",
+                "Version"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "DHCPOptions": {
+      "Type": "AWS::EC2::DHCPOptions",
+      "Properties": {
+        "DomainNameServers": [
+          {
+            "Fn::Join": [
+              ",",
+              [
+                {
+                  "Fn::If": [
+                    "is-DS-available",
+                    {
+                      "Fn::Select": [
+                        0,
+                        {
+                          "Fn::GetAtt": [
+                            "DirectoryService",
+                            "DnsIpAddresses"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                },
+                {
+                  "Fn::If": [
+                    "is-DS-available",
+                    {
+                      "Fn::Select": [
+                        1,
+                        {
+                          "Fn::GetAtt": [
+                            "DirectoryService",
+                            "DnsIpAddresses"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                },
+                "AmazonProvidedDNS"
+              ]
+            ]
+          }
+        ],
+        "DomainName": {
+          "Fn::Join": [
+            " ",
+            [
+              {
+                "Fn::If": [
+                  "NVirginia",
+                  "ec2.internal",
+                  {
+                    "Fn::Sub": "${AWS::Region}.compute.internal"
+                  }
+                ]
+              },
+              {
+                "Fn::FindInMap": [
+                  "Conf",
+                  "Directory",
+                  "DomainDNSName"
+                ]
+              }
+            ]
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-DHCPOptions"
+            }
+          },
+          {
+            "Key": "NICE:EnginFrame:Version",
+            "Value": {
+              "Fn::FindInMap": [
+                "Conf",
+                "EnginFrame",
+                "Version"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "VPCGatewayAttachment": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "InternetGatewayId": {
+          "Ref": "InternetGateway"
+        }
+      }
+    },
+    "VPCDHCPOptionsAssociation": {
+      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "DhcpOptionsId": {
+          "Ref": "DHCPOptions"
+        }
+      }
+    },
+    "RouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-RouteTable"
+            }
+          },
+          {
+            "Key": "NICE:EnginFrame:Version",
+            "Value": {
+              "Fn::FindInMap": [
+                "Conf",
+                "EnginFrame",
+                "Version"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Route": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": [
+        "VPCGatewayAttachment"
+      ],
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "RouteTable"
+        },
+        "GatewayId": {
+          "Ref": "InternetGateway"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0"
+      }
+    },
+    "Subnet0": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition": "CreateSubnet0",
+      "Properties": {
+        "VpcId": {"Ref": "VPC"},
+        "MapPublicIpOnLaunch": "true",
+        "CidrBlock": {"Fn::FindInMap": ["Conf","Network","Subnet0CidrBlock"]},
+        "AvailabilityZone": {"Fn::Select": ["0", {"Fn::GetAZs": {"Ref": "AWS::Region"}}]},
+        "Tags": [
+          {"Key": "Name","Value": {"Fn::Sub": "${AWS::StackName}-Subnet"}},
+          {"Key": "NICE:EnginFrame:Version","Value": {"Fn::FindInMap": ["Conf","EnginFrame","Version"]}}
+        ]
+      }
+    },
+    "Subnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition": "CreateSubnet1",
+      "Properties": {
+        "VpcId": {"Ref": "VPC"},
+        "MapPublicIpOnLaunch": "true",
+        "CidrBlock": {"Fn::FindInMap": ["Conf","Network","Subnet1CidrBlock"]},
+        "AvailabilityZone": {"Fn::Select": ["1", {"Fn::GetAZs": {"Ref": "AWS::Region"}}]},
+        "Tags": [
+          {"Key": "Name","Value": {"Fn::Sub": "${AWS::StackName}-Subnet"}},
+          {"Key": "NICE:EnginFrame:Version","Value": {"Fn::FindInMap": ["Conf","EnginFrame","Version"]}}
+        ]
+      }
+    },
+    "Subnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition": "CreateSubnet2",
+      "Properties": {
+        "VpcId": {"Ref": "VPC"},
+        "MapPublicIpOnLaunch": "true",
+        "CidrBlock": {"Fn::FindInMap": ["Conf","Network","Subnet2CidrBlock"]},
+        "AvailabilityZone": {"Fn::Select": ["2", {"Fn::GetAZs": {"Ref": "AWS::Region"}}]},
+        "Tags": [
+          {"Key": "Name","Value": {"Fn::Sub": "${AWS::StackName}-Subnet"}},
+          {"Key": "NICE:EnginFrame:Version","Value": {"Fn::FindInMap": ["Conf","EnginFrame","Version"]}}
+        ]
+      }
+    },
+    "Subnet3": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition": "CreateSubnet3",
+      "Properties": {
+        "VpcId": {"Ref": "VPC"},
+        "MapPublicIpOnLaunch": "true",
+        "CidrBlock": {"Fn::FindInMap": ["Conf","Network","Subnet3CidrBlock"]},
+        "AvailabilityZone": {"Fn::Select": ["3", {"Fn::GetAZs": {"Ref": "AWS::Region"}}]},
+        "Tags": [
+          {"Key": "Name","Value": {"Fn::Sub": "${AWS::StackName}-Subnet"}},
+          {"Key": "NICE:EnginFrame:Version","Value": {"Fn::FindInMap": ["Conf","EnginFrame","Version"]}}
+        ]
+      }
+    },
+    "Subnet4": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition": "CreateSubnet4",
+      "Properties": {
+        "VpcId": {"Ref": "VPC"},
+        "MapPublicIpOnLaunch": "true",
+        "CidrBlock": {"Fn::FindInMap": ["Conf","Network","Subnet4CidrBlock"]},
+        "AvailabilityZone": {"Fn::Select": ["4", {"Fn::GetAZs": {"Ref": "AWS::Region"}}]},
+        "Tags": [
+          {"Key": "Name","Value": {"Fn::Sub": "${AWS::StackName}-Subnet"}},
+          {"Key": "NICE:EnginFrame:Version","Value": {"Fn::FindInMap": ["Conf","EnginFrame","Version"]}}
+        ]
+      }
+    },
+    "SubnetRouteTableAssociation0": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition": "CreateSubnet0",
+      "Properties": {
+        "RouteTableId": {"Ref": "RouteTable"},
+        "SubnetId": {"Ref": "Subnet0"}
+      }
+    },
+    "SubnetRouteTableAssociation1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition": "CreateSubnet1",
+      "Properties": {
+        "RouteTableId": {"Ref": "RouteTable"},
+        "SubnetId": {"Ref": "Subnet1"}
+      }
+    },
+    "SubnetRouteTableAssociation2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition": "CreateSubnet2",
+      "Properties": {
+        "RouteTableId": {"Ref": "RouteTable"},
+        "SubnetId": {"Ref": "Subnet2"}
+      }
+    },
+    "SubnetRouteTableAssociation3": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition": "CreateSubnet3",
+      "Properties": {
+        "RouteTableId": {"Ref": "RouteTable"},
+        "SubnetId": {"Ref": "Subnet3"}
+      }
+    },
+    "SubnetRouteTableAssociation4": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition": "CreateSubnet4",
+      "Properties": {
+        "RouteTableId": {"Ref": "RouteTable"},
+        "SubnetId": {"Ref": "Subnet4"}
+      }
+    },
+    "UserDirectory": {
+      "Type": "Custom::UserDirectory",
+      "Properties": {
+        "ServiceToken": {"Fn::GetAtt": ["UserDirectoryLambda","Arn"]},
+        "VpcId": {"Ref": "VPC"},
+        "AllSubnets": [
+          {"Fn::If": ["CreateSubnet0", {"Ref": "Subnet0"}, {"Ref": "AWS::NoValue"}]},
+          {"Fn::If": ["CreateSubnet1", {"Ref": "Subnet1"}, {"Ref": "AWS::NoValue"}]},
+          {"Fn::If": ["CreateSubnet2", {"Ref": "Subnet2"}, {"Ref": "AWS::NoValue"}]},
+          {"Fn::If": ["CreateSubnet3", {"Ref": "Subnet3"}, {"Ref": "AWS::NoValue"}]},
+          {"Fn::If": ["CreateSubnet4", {"Ref": "Subnet4"}, {"Ref": "AWS::NoValue"}]}
+        ],
+        "FakeDependsOn": [
+          {"Fn::If": ["CreateSubnet0", {"Ref": "SubnetRouteTableAssociation0"}, {"Ref": "AWS::NoValue"}]},
+          {"Fn::If": ["CreateSubnet1", {"Ref": "SubnetRouteTableAssociation1"}, {"Ref": "AWS::NoValue"}]},
+          {"Fn::If": ["CreateSubnet2", {"Ref": "SubnetRouteTableAssociation2"}, {"Ref": "AWS::NoValue"}]},
+          {"Fn::If": ["CreateSubnet3", {"Ref": "SubnetRouteTableAssociation3"}, {"Ref": "AWS::NoValue"}]},
+          {"Fn::If": ["CreateSubnet4", {"Ref": "SubnetRouteTableAssociation4"}, {"Ref": "AWS::NoValue"}]}
+        ]
+      }
+    },
+    "UserDirectoryRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": ["sts:AssumeRole"],
+              "Effect": "Allow",
+              "Principal": {"Service": ["lambda.amazonaws.com"]}
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "UserDirectoryPolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "logs",
+                  "Effect": "Deny",
+                  "Resource": "arn:aws:logs:*:*:*",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ]
+                },
+                {
+                  "Sid": "Misc",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Action": [
+                    "ec2:DeleteSubnet"
+                  ]
+                },
+                {
+                  "Sid": "CreateDirectory",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Action": [
+                    "ds:CreateDirectory",
+                    "ec2:DescribeSubnets",
+                    "ec2:DescribeVpcs",
+                    "ec2:CreateSecurityGroup",
+                    "ec2:CreateNetworkInterface",
+                    "ec2:DescribeNetworkInterfaces",
+                    "ec2:AuthorizeSecurityGroupIngress",
+                    "ec2:AuthorizeSecurityGroupEgress"
+                  ]
+                },
+                {
+                  "Sid": "DeleteDirectory",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Action": [
+                    "ds:DeleteDirectory",
+                    "ec2:DescribeNetworkInterfaces",
+                    "ec2:DeleteSecurityGroup",
+                    "ec2:DeleteNetworkInterface",
+                    "ec2:RevokeSecurityGroupIngress",
+                    "ec2:RevokeSecurityGroupEgress"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "UserDirectoryLambda": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Timeout": "300",
+        "Runtime": "python2.7",
+        "Handler": "index.handler",
+        "Role": {"Fn::GetAtt": ["UserDirectoryRole","Arn"]},
+        "Code": {"ZipFile": {"Fn::Join": ["\n", [
+          "import cfnresponse",
+          "import itertools",
+          "import boto3",
+          "dsClient = boto3.client('ds')",
+          "ec2Client = boto3.client('ec2')",
+          "ec2Resource = boto3.resource('ec2')",
+          "def handler(event, context):",
+          "    ResponseData = {}",
+          "    if event['RequestType'] == 'Create':",
+          "        AllSubnets = event['ResourceProperties']['AllSubnets']",
+          "        VpcId = event['ResourceProperties']['VpcId']",
+          "        for SubnetIds in itertools.combinations(AllSubnets, 2):",
+          "            try:",
+          "                CreateDirectory = dsClient.create_directory(",
+          "                    Name='enginframe.domain.test',",
+          "                    ShortName='MYHPC',",
+          "                    Password='Password1!',",
+          "                    Description='MyHPC Directory Service',",
+          "                    Size='Small',",
+          "                    VpcSettings={",
+          "                        'VpcId': VpcId,",
+          "                        'SubnetIds': SubnetIds",
+          "                    }",
+          "                )",
+          "                DirectoryId = CreateDirectory['DirectoryId']",
+          "                DeleteDirectory = dsClient.delete_directory(",
+          "                    DirectoryId = DirectoryId",
+          "                )",
+          "                DeleteSubnets = []",
+          "                for SubnetId in set(AllSubnets) - set(SubnetIds):",
+          "                    DeleteSubnets.append(ec2Client.delete_subnet(SubnetId = SubnetId))",
+          "                ResponseData['DirectoryId'] = DirectoryId",
+          "                ResponseData['SubnetIds'] = SubnetIds",
+          "                ResponseData['AZs'] = [ec2Resource.Subnet(SubnetIds[0]).availability_zone,ec2Resource.Subnet(SubnetIds[1]).availability_zone]",
+          "                ResponseData['CreateDirectory'] = CreateDirectory",
+          "                ResponseData['DeleteDirectory'] = DeleteDirectory",
+          "                ResponseData['DeleteSubnets'] = DeleteSubnets",
+          "                break",
+          "            except Exception as e:",
+          "                print e",
+          "        if 'DirectoryId' in ResponseData:",
+          "            cfnresponse.send(event, context, cfnresponse.SUCCESS, ResponseData)",
+          "        else:",
+          "            cfnresponse.send(event, context, cfnresponse.FAILED, ResponseData)",
+          "    else:",
+          "        cfnresponse.send(event, context, cfnresponse.SUCCESS, ResponseData)"
+        ]]}}
+      }
+    },
+    "CfnClusterAdditionalSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security Group for CfnCluster instances",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
+            "CidrIp": {
+              "Ref": "AccessFromCidr"
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-SecurityGroup"
+            }
+          },
+          {
+            "Key": "NICE:EnginFrame:Version",
+            "Value": {
+              "Fn::FindInMap": [
+                "Conf",
+                "EnginFrame",
+                "Version"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "CfnClusterSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "CfnCluster Security Group",
+        "VpcId" : {
+          "Ref" : "VPC"
+        },
+        "SecurityGroupIngress" : [
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "22",
+            "ToPort" : "22",
+            "CidrIp" : {
+              "Ref" : "AccessFromCidr"
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-CfnClusterSecurityGroup"
+            }
+          }
+        ]
+      }
+    },
+    "CfnClusterSecurityGroupIngress" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "IpProtocol" : "-1",
+        "FromPort": "-1",
+        "ToPort": "-1",
+        "SourceSecurityGroupId" : {
+          "Ref" : "CfnClusterSecurityGroup"
+        },
+        "GroupId" : {
+          "Ref" : "CfnClusterSecurityGroup"
+        }
+      }
+    },
+    "CfnClusterAdditionalSGIngress443": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "IpProtocol": "tcp",
+        "FromPort": "443",
+        "ToPort": "443",
+        "GroupId": {
+          "Ref": "CfnClusterAdditionalSG"
+        },
+        "SourceSecurityGroupId": {
+          "Ref": "ApplicationLoadBalancerSG"
+        }
+      }
+    },
+    "CfnClusterAdditionalSGIngressAllTraffic": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "IpProtocol": "-1",
+        "FromPort": "-1",
+        "ToPort": "-1",
+        "GroupId": {
+          "Ref": "CfnClusterAdditionalSG"
+        },
+        "SourceSecurityGroupId": {
+          "Ref": "CfnClusterAdditionalSG"
+        }
+      }
+    },
+    "ApplicationLoadBalancerSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "ELB Access",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
+            "CidrIp": {
+              "Ref": "AccessFromCidr"
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-ApplicationLoadBalancerSG"
+            }
+          }
+        ]
+      }
+    },
+    "ApplicationLoadBalancerSGEgress443": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties": {
+        "IpProtocol": "tcp",
+        "FromPort": "443",
+        "ToPort": "443",
+        "GroupId": {
+          "Ref": "ApplicationLoadBalancerSG"
+        },
+        "DestinationSecurityGroupId": {
+          "Ref": "CfnClusterAdditionalSG"
+        }
+      }
+    },
+    "ApplicationLoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Name": {
+          "Ref": "AWS::StackName"
+        },
+        "Scheme": "internet-facing",
+        "Subnets": {"Fn::GetAtt": ["UserDirectory","SubnetIds"]},
+        "SecurityGroups": [
+          {
+            "Ref": "ApplicationLoadBalancerSG"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-ApplicationLoadBalancer"
+            }
+          },
+          {
+            "Key": "NICE:EnginFrame:Version",
+            "Value": {
+              "Fn::FindInMap": [
+                "Conf",
+                "EnginFrame",
+                "Version"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "LambdaRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "Lambda",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Fn::If": [
+                    "is-Debug-enabled",
+                    {
+                      "Sid": "logs",
+                      "Effect": "Allow",
+                      "Resource": "arn:aws:logs:*:*:*",
+                      "Action": [
+                        "logs:CreateLogGroup",
+                        "logs:CreateLogStream",
+                        "logs:PutLogEvents"
+                      ]
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                },
+                {
+                  "Sid": "kms",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Action": [
+                    "kms:Encrypt"
+                  ]
+                },
+                {
+                  "Sid": "elb",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Action": [
+                    "elasticloadbalancing:DescribeTargetGroups",
+                    "elasticloadbalancing:DeleteTargetGroup",
+                    "elasticloadbalancing:DeleteListener"
+                  ]
+                },
+                {
+                  "Sid": "iam",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Action": [
+                    "iam:UploadServerCertificate",
+                    "iam:DeleteServerCertificate",
+                    "iam:ListRolePolicies",
+                    "iam:DeleteRolePolicy"
+                  ]
+                },
+                {
+                  "Sid": "ec2",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Action": [
+                    "ec2:CreateTags",
+                    "ec2:DescribeTags"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "LambdaCertificate": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Timeout": "300",
+        "Runtime": "nodejs4.3",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "ZipFile": {
+            "Fn::Join": [
+              "\n",
+              [
+                "var AWS = require('aws-sdk');",
+                "var response = require('cfn-response');",
+                "var child_process = require('child_process');",
+                "var fs = require('fs');",
+                "exports.handler = function (event, context) {",
+                "    if (event.RequestType === 'Create') {",
+                "        var iam = new AWS.IAM();",
+                "        var ec2 = new AWS.EC2();",
+                "        var DNSName = event.ResourceProperties.DNSName;",
+                "        var VpcId = event.ResourceProperties.VpcId;",
+                "        var subj = '/C=IT/ST=Piedmont/L=Asti/O=NICE/OU=ProServ/CN=' + DNSName;",
+                "        var command = 'cd /tmp; openssl req -new -x509 -nodes -newkey rsa:2048 -days 1024 -keyout /tmp/key -out /tmp/crt -subj ' + subj;",
+                "        child_process.execSync(command);",
+                "        var crt = fs.readFileSync('/tmp/crt', 'ascii');",
+                "        var key = fs.readFileSync('/tmp/key', 'ascii');",
+                "        fs.unlinkSync('/tmp/key');",
+                "        fs.unlinkSync('/tmp/crt');",
+                "        var promises = [];",
+                "        promises.push(iam.uploadServerCertificate({CertificateBody: crt, PrivateKey: key, ServerCertificateName: DNSName}).promise());",
+                "        promises.push(ec2.createTags({Resources: [VpcId], Tags: [{'Key': 'NICE:EnginFrame:DNSName', 'Value': DNSName}]}).promise());",
+                "        Promise.all(promises).then(function (data) {",
+                "            setTimeout(function () {",
+                "                response.send(event, context, response.SUCCESS, {CertificateArn: data[0].ServerCertificateMetadata.Arn});",
+                "            }, 10000);",
+                "        }).catch(function (error) {",
+                "            console.error('error:\\n', JSON.stringify(error));",
+                "            response.send(event, context, response.FAILED);",
+                "        });",
+                "    } else {",
+                "        response.send(event, context, response.SUCCESS);",
+                "    }",
+                "};"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "Certificate": {
+      "Type": "Custom::Certificate",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LambdaCertificate",
+            "Arn"
+          ]
+        },
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "DNSName": {
+          "Fn::GetAtt": [
+            "ApplicationLoadBalancer",
+            "DNSName"
+          ]
+        }
+      }
+    },
+    "DefaultTargetGroup": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Name": {
+          "Ref": "AWS::StackName"
+        },
+        "Port": 443,
+        "Protocol": "HTTPS",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-DefaultTargetGroup"
+            }
+          },
+          {
+            "Key": "NICE:EnginFrame:Version",
+            "Value": {
+              "Fn::FindInMap": [
+                "Conf",
+                "EnginFrame",
+                "Version"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ApplicationListener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "LoadBalancerArn": {
+          "Ref": "ApplicationLoadBalancer"
+        },
+        "Port": 443,
+        "Protocol": "HTTPS",
+        "Certificates": [
+          {
+            "CertificateArn": {
+              "Fn::GetAtt": [
+                "Certificate",
+                "CertificateArn"
+              ]
+            }
+          }
+        ],
+        "DefaultActions": [
+          {
+            "Type": "forward",
+            "TargetGroupArn": {
+              "Ref": "DefaultTargetGroup"
+            }
+          }
+        ]
+      }
+    },
+    "LambdaEncrypt": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Timeout": "300",
+        "Runtime": "nodejs4.3",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "ZipFile": {
+            "Fn::Join": [
+              "\n",
+              [
+                "var AWS = require('aws-sdk');",
+                "var response = require('cfn-response');",
+                "exports.handler = function (event, context) {",
+                "    if (event.RequestType === 'Create') {",
+                "        var kms = new AWS.KMS();",
+                "        var KeyId = event.ResourceProperties.KeyId;",
+                "        var DomainAdminPassword = event.ResourceProperties.DomainAdminPassword;",
+                "        var EnginFrameAdminPassword = event.ResourceProperties.EnginFrameAdminPassword;",
+                "        var promises = [];",
+                "        promises.push(kms.encrypt({KeyId: KeyId, Plaintext: DomainAdminPassword}).promise());",
+                "        promises.push(kms.encrypt({KeyId: KeyId, Plaintext: EnginFrameAdminPassword}).promise());",
+                "        Promise.all(promises).then(function (data) {",
+                "            var result = {};",
+                "            result.DomainAdminPassword = new Buffer(data[0].CiphertextBlob).toString('base64');",
+                "            result.EnginFrameAdminPassword = new Buffer(data[1].CiphertextBlob).toString('base64');",
+                "            response.send(event, context, response.SUCCESS, result);",
+                "        }).catch(function (error) {",
+                "            console.error('error:\\n', JSON.stringify(error));",
+                "            response.send(event, context, response.FAILED);",
+                "        });",
+                "    } else {",
+                "        response.send(event, context, response.SUCCESS);",
+                "    }",
+                "};"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "Encrypted": {
+      "Type": "Custom::Encrypted",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LambdaEncrypt",
+            "Arn"
+          ]
+        },
+        "KeyId": {
+          "Ref": "MasterKey"
+        },
+        "DomainAdminPassword": {
+          "Ref": "DomainAdminPassword"
+        },
+        "EnginFrameAdminPassword": {
+          "Ref": "EnginFrameAdminPassword"
+        }
+      }
+    },
+    "LambdaCleanupRolePolicies": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Timeout": "300",
+        "Runtime": "nodejs4.3",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "ZipFile": {
+            "Fn::Join": [
+              "\n",
+              [
+                "var AWS = require('aws-sdk');",
+                "var response = require('cfn-response');",
+                "exports.handler = function (event, context) {",
+                "    if (event.RequestType === 'Delete') {",
+                "        var iam = new AWS.IAM();",
+                "        var RoleName = event.ResourceProperties.RoleName;",
+                "        iam.listRolePolicies({RoleName: RoleName}, function (error, data) {",
+                "            if (error) {",
+                "                console.error('error:\\n', JSON.stringify(error));",
+                "                response.send(event, context, response.FAILED);",
+                "            } else {",
+                "                var promises = [];",
+                "                data.PolicyNames.forEach(function (PolicyName) {",
+                "                    if (/^BlockInstance_/.test(PolicyName)) {",
+                "                        console.log('deleteRolePolicy: ' + PolicyName);",
+                "                        promises.push(iam.deleteRolePolicy({RoleName: RoleName, PolicyName: PolicyName}).promise());",
+                "                    }",
+                "                });",
+                "                Promise.all(promises).then(function (data) {",
+                "                    response.send(event, context, response.SUCCESS);",
+                "                }).catch(function (error) {",
+                "                    console.error('error:\\n', JSON.stringify(error));",
+                "                    response.send(event, context, response.FAILED);",
+                "                });",
+                "            }",
+                "        });",
+                "    } else {",
+                "        response.send(event, context, response.SUCCESS);",
+                "    }",
+                "};"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "CleanupRolePolicies": {
+      "Type": "Custom::CleanupRolePolicies",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LambdaCleanupRolePolicies",
+            "Arn"
+          ]
+        },
+        "RoleName": {
+          "Ref": "CfnClusterRole"
+        }
+      }
+    },
+    "LambdaCleanupCertificate": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Timeout": "300",
+        "Runtime": "nodejs4.3",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "ZipFile": {
+            "Fn::Join": [
+              "\n",
+              [
+                "var AWS = require('aws-sdk');",
+                "var response = require('cfn-response');",
+                "exports.handler = function (event, context) {",
+                "    if (event.RequestType === 'Delete') {",
+                "        var ec2 = new AWS.EC2();",
+                "        var iam = new AWS.IAM();",
+                "        var VpcId = event.ResourceProperties.VpcId;",
+                "        ec2.describeTags({Filters: [{Name: 'resource-id', Values: [VpcId]}, {Name: 'key', Values: ['NICE:EnginFrame:DNSName']}]}, function (error, data) {",
+                "            if (error) {",
+                "                console.error('error:\\n', JSON.stringify(error));",
+                "                response.send(event, context, response.FAILED);",
+                "            } else {",
+                "                if (data.Tags.length === 1) {",
+                "                    var ServerCertificateName = data.Tags[0].Value;",
+                "                    iam.deleteServerCertificate({ServerCertificateName: ServerCertificateName}, function (error, data) {",
+                "                        if (error) {",
+                "                            console.error('error:\\n', JSON.stringify(error));",
+                "                            response.send(event, context, response.FAILED);",
+                "                        } else {",
+                "                            console.log('iam.deleteServerCertificate: ' + ServerCertificateName);",
+                "                            response.send(event, context, response.SUCCESS);",
+                "                        }",
+                "                    });",
+                "                } else {",
+                "                    console.error('error:\\n', JSON.stringify(data));",
+                "                    response.send(event, context, response.FAILED);",
+                "                }",
+                "            }",
+                "        });",
+                "    } else {",
+                "        response.send(event, context, response.SUCCESS);",
+                "    }",
+                "};"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "CleanupCertificate": {
+      "Type": "Custom::CleanupCertificate",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LambdaCleanupCertificate",
+            "Arn"
+          ]
+        },
+        "VpcId": {
+          "Ref": "VPC"
+        }
+      }
+    },
+    "DirectoryService": {
+      "Type": "AWS::DirectoryService::SimpleAD",
+      "Condition": "is-DS-available",
+      "Properties": {
+        "Size": "Small",
+        "Name": {"Fn::FindInMap": ["Conf","Directory","DomainDNSName"]},
+        "Password": {"Ref": "DomainAdminPassword"},
+        "VpcSettings": {
+          "VpcId": {"Ref": "VPC"},
+          "SubnetIds": {"Fn::GetAtt": ["UserDirectory","SubnetIds"]}
+        }
+      },
+      "Metadata": {
+        "DomainAdminPassword": {"Fn::GetAtt": ["Encrypted","DomainAdminPassword"]},
+        "EnginFrameAdminPassword": {"Fn::GetAtt": ["Encrypted","EnginFrameAdminPassword"]}
+      }
+    },
+    "FileSystem": {
+      "Type": "AWS::EFS::FileSystem",
+      "Condition": "is-EFS-available",
+      "Properties": {
+        "FileSystemTags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-FileSystem"
+            }
+          },
+          {
+            "Key": "NICE:EnginFrame:Version",
+            "Value": {
+              "Fn::FindInMap": [
+                "Conf",
+                "EnginFrame",
+                "Version"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "FileSystemSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Condition": "is-EFS-available",
+      "Properties": {
+        "GroupDescription": "Security Group for EFS",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": {
+          "IpProtocol": "tcp",
+          "FromPort": "2049",
+          "ToPort": "2049",
+          "SourceSecurityGroupId": {
+            "Ref": "CfnClusterAdditionalSG"
+          }
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-SecurityGroup"
+            }
+          },
+          {
+            "Key": "NICE:EnginFrame:Version",
+            "Value": {
+              "Fn::FindInMap": [
+                "Conf",
+                "EnginFrame",
+                "Version"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "MountTarget0": {
+      "Type": "AWS::EFS::MountTarget",
+      "Condition": "is-EFS-available",
+      "Properties": {
+        "SubnetId": {"Fn::Select": ["0", {"Fn::GetAtt": ["UserDirectory","SubnetIds"]}]},
+        "FileSystemId": {"Ref": "FileSystem"},
+        "SecurityGroups": [{"Ref": "FileSystemSG"}]
+      }
+    },
+    "MountTarget1": {
+      "Type": "AWS::EFS::MountTarget",
+      "Condition": "is-EFS-available",
+      "Properties": {
+        "SubnetId": {"Fn::Select": ["1", {"Fn::GetAtt": ["UserDirectory","SubnetIds"]}]},
+        "FileSystemId": {"Ref": "FileSystem"},
+        "SecurityGroups": [{"Ref": "FileSystemSG"}]
+      }
+    },
+    "DefaultCluster": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Condition": "are-EFS-and-DS-available",
+      "DependsOn": [
+        "VPCDHCPOptionsAssociation",
+        "VPCGatewayAttachment",
+        "DirectoryService",
+        "FileSystem"
+      ],
+      "Properties": {
+        "TemplateURL": "https://s3.amazonaws.com/nice-enginframe-us-east-1/latest/cfncluster-1.3.2.cfn.fixed.json",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-DefaultCluster"
+            }
+          },
+          {
+            "Key": "NICE:EnginFrame:Version",
+            "Value": {
+              "Fn::FindInMap": [
+                "Conf",
+                "EnginFrame",
+                "Version"
+              ]
+            }
+          }
+        ],
+        "Parameters": {
+          "AccessFrom": {"Ref": "AccessFromCidr"},
+          "AdditionalSG": {"Ref": "CfnClusterAdditionalSG"},
+          "AvailabilityZone": {"Fn::Select": ["0", {"Fn::GetAtt": ["UserDirectory","AZs"]}]},
+          "ComputeInstanceType": {"Ref": "CfnClusterComputeInstanceType"},
+          "ComputeWaitConditionCount": {"Ref": "CfnClusterInitialQueueSize"},
+          "EC2IAMRoleName": {"Ref": "CfnClusterInstanceProfile"},
+          "InitialQueueSize": {"Ref": "CfnClusterInitialQueueSize"},
+          "KeyName": {"Ref": "CfnClusterKeyName"},
+          "MaintainInitialSize": {"Ref": "CfnClusterMaintainInitialSize"},
+          "MasterInstanceType": {"Ref": "CfnClusterMasterInstanceType"},
+          "MasterSubnetId": {"Fn::Select": ["0", {"Fn::GetAtt": ["UserDirectory","SubnetIds"]}]},
+          "MaxQueueSize": {"Ref": "CfnClusterMaxQueueSize"},
+          "PostInstallScript": {
+            "Fn::Sub": [
+              "s3://${BucketBasename}-${Region}/${Version}/enginframe.post.sh",
+              {
+                "BucketBasename": {
+                  "Fn::FindInMap": [
+                    "Conf",
+                    "EnginFrame",
+                    "BucketBasename"
+                  ]
+                },
+                "Region": {
+                  "Ref": "AWS::Region"
+                },
+                "Version": {
+                  "Fn::FindInMap": [
+                    "Conf",
+                    "EnginFrame",
+                    "Version"
+                  ]
+                }
+              }
+            ]
+          },
+          "PreInstallScript": {
+            "Fn::Sub": [
+              "s3://${BucketBasename}-${Region}/${Version}/enginframe.pre.sh",
+              {
+                "BucketBasename": {
+                  "Fn::FindInMap": [
+                    "Conf",
+                    "EnginFrame",
+                    "BucketBasename"
+                  ]
+                },
+                "Region": {
+                  "Ref": "AWS::Region"
+                },
+                "Version": {
+                  "Fn::FindInMap": [
+                    "Conf",
+                    "EnginFrame",
+                    "Version"
+                  ]
+                }
+              }
+            ]
+          },
+          "Scheduler": {"Ref": "CfnClusterScheduler"},
+          "VPCId": {"Ref": "VPC"},
+          "VPCSecurityGroupId": {"Ref": "CfnClusterSecurityGroup"},
+          "AdditionalCfnTemplate": "NONE",
+          "BaseOS": "alinux",
+          "CLITemplate": "default",
+          "ClusterReadyScript": "NONE",
+          "ClusterType": "ondemand",
+          "ComputeRootVolumeSize": "15",
+          "ComputeSubnetCidr": "NONE",
+          "ComputeSubnetId": "NONE",
+          "CustomAMI": "NONE",
+          "CustomChefCookbook": "NONE",
+          "CustomChefRunList": "NONE",
+          "CWLLogGroup": "NONE",
+          "CWLRegion": "NONE",
+          "EBSEncryption": "false",
+          "EBSKMSKeyId": "NONE",
+          "EBSSnapshotId": "NONE",
+          "EBSVolumeId": "NONE",
+          "EncryptedEphemeral": "false",
+          "EphemeralDir": "/scratch",
+          "EphemeralKMSKeyId": "NONE",
+          "ExtraJson": "{}",
+          "MasterRootVolumeSize": "15",
+          "Placement": "cluster",
+          "PlacementGroup": "DYNAMIC",
+          "PostInstallArgs": "NONE",
+          "PreInstallArgs": "NONE",
+          "ProxyServer": "NONE",
+          "S3ReadResource": "NONE",
+          "S3ReadWriteResource": "NONE",
+          "ScalingAdjustment": "1",
+          "ScalingAdjustment2": "10",
+          "ScalingCooldown": "300",
+          "ScalingEvaluationPeriods": "2",
+          "ScalingPeriod": "60",
+          "ScalingThreshold": "1",
+          "ScalingThreshold2": "200",
+          "SharedDir": "/shared",
+          "SpotPrice": "0.00",
+          "Tenancy": "default",
+          "UsePublicIps": "true",
+          "VolumeIOPS": "100",
+          "VolumeSize": "20",
+          "VolumeType": "gp2"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "EnginFrameURL": {
+      "Description": "ELB access to EnginFrame",
+      "Value": {
+        "Fn::Sub": "https://${ApplicationLoadBalancer.DNSName}/"
+      }
+    },
+    "CfnClusterConfig": {
+      "Description": "Configuration file for CfnCluster command-line: cfncluster --config <config file> create <cluster name>",
+      "Value": {
+        "Fn::Sub": "https://${ApplicationLoadBalancer.DNSName}/cfncluster.config"
+      }
+    }
+  }
+}

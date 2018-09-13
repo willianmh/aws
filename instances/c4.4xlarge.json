@@ -20,8 +20,8 @@
     "MinCount": 1,
     "InstanceType": "c4.4xlarge",
     "KeyName": "willkey",
-    "SecurityGroupIds": ["sg-02f4ea97d74f5e263"],
-    "SubnetId": "subnet-0fc78340b0af1017d",
+    "SecurityGroupIds": ["sg-09bdec97b2c3a254c"],
+    "SubnetId": "subnet-01cb22bf76f1a3db7",
     "Monitoring": {
         "Enabled": false
     },

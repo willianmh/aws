@@ -170,7 +170,7 @@
         ]},
         "AvailabilityZone" : {"Ref": "AvailabilityZone"},
         "CidrBlock" : "10.0.1.0/24",
-        "MapPublicIpOnLaunch" : true,
+        "MapPublicIpOnLaunch" : false,
         "Tags" : [
           {
             "Key": "Name",
@@ -446,6 +446,46 @@
             "Value": {"Ref": "Owner"}
           }
         ]
+      }
+    },
+    "MyMasterEIP": {
+      "Type" : "AWS::EC2::EIP",
+      "DependsOn": "Master",
+      "Properties" : {
+        "InstanceId" : {"Ref": "Master"},
+        "Domain": "vpc"
+      }
+    },
+    "MyMasterEIPAssociation": {
+      "Type": "AWS::EC2::EIPAssociation",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "MyMasterEIP",
+            "AllocationId"
+          ]
+        },
+        "NetworkInterfaceId": {"Ref": "MasterNetworkInterface"}
+      }
+    },
+    "MyComputeEIP": {
+      "Type" : "AWS::EC2::EIP",
+      "DependsOn": "Compute",
+      "Properties" : {
+        "InstanceId" : {"Ref": "Compute"},
+        "Domain": "vpc"
+      }
+    },
+    "MyComputeEIPAssociation": {
+      "Type": "AWS::EC2::EIPAssociation",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "MyComputeEIP",
+            "AllocationId"
+          ]
+        },
+        "NetworkInterfaceId": {"Ref": "ComputeNetworkInterface"}
       }
     }
   },

@@ -2,49 +2,61 @@ import boto3
 import os, sys
 import json
 
-def createEnviroment():
+
+def validateTemplate(TemplateBody):
+    client = boto3.client('cloudformation')
+
+    with open(TemplateBody, 'r') as f:
+        response = client.validate_template(TemplateBody=f.read())
+
+def createEnviroment(TemplateBody, StackName="myFirstStack"):
     client = boto3.client('cloudformation')
 
     # template = json.load(open('../cluster_enviroment.json', 'r'))
+    with open(TemplateBody, 'r') as template:
+        response = client.create_stack(
+            StackName=StackName,
+            TemplateBody=template.read(),
+            Parameters=[
+                {
+                    'ParameterKey': 'KeyName',
+                    'ParameterValue': 'willkey'
+                },
+                {
+                    'ParameterKey': 'Owner',
+                    'ParameterValue': 'will'
+                },
+                {
+                    'ParameterKey': 'MasterInstanceType',
+                    'ParameterValue': 'c5.large'
+                },
+                {
+                    'ParameterKey': 'ComputeInstanceType',
+                    'ParameterValue': 'c5.large'
+                },
+                {
+                    'ParameterKey': 'BaseOS',
+                    'ParameterValue': 'ubuntu1604'
+                },
+                {
+                    'ParameterKey': 'CustomAMI',
+                    'ParameterValue': 'ami-0ec6192b8b6c593b9'
+                },
+                {
+                    'ParameterKey': 'AvailabilityZone',
+                    'ParameterValue': 'us-east-1a'
+                },
+                {
+                    'ParameterKey': 'VPCID',
+                    'ParameterValue': 'vpc-04e161e891f4d14c2'
+                }
+            ]
+        )
+        
+    waiter = client.get_waiter('stack_create_complete')
 
-    response = client.create_stack(
-        StackName="myFirstStack",
-        TemplateBody='file://home/hayashida/Documents/aws/lib/cluster_enviroment.json',
-        Parameters=[
-            {
-                'ParameterKey': 'KeyName',
-                'ParameterValue': 'willkey'
-            },
-            {
-                'ParameterKey': 'Owner',
-                'ParameterValue': 'will'
-            },
-            {
-                'ParameterKey': 'MasterInstanceType',
-                'ParameterValue': 'c5.large'
-            },
-            {
-                'ParameterKey': 'ComputeInstanceType',
-                'ParameterValue': 'c5.large'
-            },
-            {
-                'ParameterKey': 'BaseOS',
-                'ParameterValue': 'ubuntu1604'
-            },
-            {
-                'ParameterKey': 'CustomAMI',
-                'ParameterValue': 'ami-0ec6192b8b6c593b9'
-            },
-            {
-                'ParameterKey': 'AvailabilityZone',
-                'ParameterValue': 'us-east-1a'
-            },
-            {
-                'ParameterKey': 'VPCID',
-                'ParameterValue': 'vpc-04e161e891f4d14c2'
-            }
-        ]
-    )
+    return cloudformation.Stack(StackName).outputs
+
 
 # *********************************************************
 # List EC2 instances

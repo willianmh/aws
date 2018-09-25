@@ -26,5 +26,19 @@
         "Enabled": false
     },
     "InstanceInitiatedShutdownBehavior": "terminate",
-    "UserData": "$SHELL_SCRIPT$"
+    "UserData": "$SHELL_SCRIPT$",
+    "TagSpecifications": [
+      {"ResourceType": "instance",
+      "Tags":[
+          {
+            "Key": "Owner",
+            "Value": "will"
+          },
+          {
+            "Key": "Name",
+            "Value": "testando"
+          }
+        ]
+      }
+    ]
 }

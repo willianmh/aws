@@ -46,7 +46,7 @@
     "VPCID": {
       "Description": "ID of an existing ID VPC, to use instead of creating a new one. By default it will create a new VPC",
       "Type": "String",
-      "Default": "NONE",
+      "Default": "NONE"
     }
   },
   "Conditions": {
@@ -107,7 +107,7 @@
     }
   },
   "Resources": {
-    "MyVPC": {
+    "MyNewVPC": {
       "Type" : "AWS::EC2::VPC",
       "Condition": "CreateVPC",
       "Properties" : {
@@ -153,7 +153,7 @@
         "InternetGatewayId" : {"Ref": "MyInternetGateway"},
         "VpcId" : {"Fn::If":[
           "CreateVPC",
-          {"Ref": "MyVPC"},
+          {"Ref": "MyNewVPC"},
           {"Ref": "VPCID"}
         ]}
       }
@@ -163,7 +163,7 @@
       "Properties" : {
         "VpcId" : {"Fn::If":[
           "CreateVPC",
-          {"Ref": "MyVPC"},
+          {"Ref": "MyNewVPC"},
           {"Ref": "VPCID"}
         ]},
         "AvailabilityZone" : {"Ref": "AvailabilityZone"},
@@ -188,7 +188,7 @@
       "Properties" : {
         "VpcId" : {"Fn::If":[
           "CreateVPC",
-          {"Ref": "MyVPC"},
+          {"Ref": "MyNewVPC"},
           {"Ref": "VPCID"}
         ]},
         "Tags" : [
@@ -228,7 +228,7 @@
         "GroupDescription": "Enable access to the Master host",
         "VpcId": {"Fn::If":[
           "CreateVPC",
-          {"Ref": "MyVPC"},
+          {"Ref": "MyNewVPC"},
           {"Ref": "VPCID"}
         ]},
         "SecurityGroupIngress": [
@@ -315,34 +315,6 @@
         ]
       }
     },
-    "MyFileSystem": {
-      "Type" : "AWS::EFS::FileSystem",
-      "Properties" : {
-        "PerformanceMode" : "generalPurpose",
-        "ThroughputMode" : "bursting",
-        "FileSystemTags" : [
-          {
-            "Key":"Name",
-            "Value": {
-              "Fn::Join" : [ "-", [ {"Ref": "Owner"}, "efs"] ]
-            }
-          },
-          {
-            "Key": "Owner",
-            "Value": {"Ref": "Owner"}
-          }
-        ]
-      }
-    },
-    "MyEFSMountTarget": {
-      "Type" : "AWS::EFS::MountTarget",
-      "DependsOn": ["MyFileSystem", "MySecurityGroup", "MySubnet"],
-      "Properties" : {
-        "FileSystemId" : {"Ref": "MyFileSystem"},
-        "SecurityGroups" : [ {"Ref": "MySecurityGroup"} ],
-        "SubnetId" : {"Ref":"MySubnet"}
-      }
-    },
     "Master": {
       "Type": "AWS::EC2::Instance",
       "DependsOn": ["MyPlacementGroup", "MasterNetworkInterface", "MyEFSMountTarget"],
@@ -392,35 +364,7 @@
           "apt-get -y update\n",
           "apt-get -y install nfs-common\n",
           "apt-get -y install build-essential curl wget git\n",
-          "apt-get -y install binutils\n",
-
-          "git clone https://github.com/aws/efs-utils\n",
-          "cd efs-utils\n",
-          "./build-deb.sh\n",
-          "apt-get -y install ./build/amazon-efs-utils*deb\n",
-
-          "mkdir /home/ubuntu/shared\n",
-          "MYEFS_DNS=",
-          {"Fn::Join": [".", [{"Ref":"MyFileSystem"}, "efs", {"Ref":"AvailabilityZone"}, "amazonaws.com"]]},
-          "\n",
-
-          "bash -c 'echo \"",
-          { "Ref": "MyFileSystem" },
-          ":/ /home/ubuntu/shared efs defaults,_netdev 0 0\" >> /etc/fstab'\n",
-          "OUT=$?\n",
-          "OUT2=2\n",
-          "if [ $OUT -ne 0 ];then\n",
-          "   bash -c 'echo \"",
-          {"Fn::Join": [".", [{"Ref":"MyFileSystem"}, "efs", {"Ref":"AvailabilityZone"}, "amazonaws.com"]]},
-          ":/ /home/ubuntu/shared nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev,noresvport 0 0\" >> /etc/fstab'\n",
-          "   OUT2=$?\n",
-          "fi\n",
-
-          "if [[ $OUT -ne 0 && $OUT2 -ne 0 ]];then\n",
-          "   echo 'Não foi possivel montar o sistema de arquivos na inicializaçao' > README\n",
-          "else\n",
-          "   mount -a\n",
-          "fi\n"
+          "apt-get -y install binutils\n"
         ]]}},
         "Tags": [
           {
@@ -485,35 +429,7 @@
           "apt-get -y update\n",
           "apt-get -y install nfs-common\n",
           "apt-get -y install build-essential curl wget git\n",
-          "apt-get -y install binutils\n",
-
-          "git clone https://github.com/aws/efs-utils\n",
-          "cd efs-utils\n",
-          "./build-deb.sh\n",
-          "apt-get -y install ./build/amazon-efs-utils*deb\n",
-
-          "mkdir /home/ubuntu/shared\n",
-          "MYEFS_DNS=",
-          {"Fn::Join": [".", [{"Ref":"MyFileSystem"}, "efs", {"Ref":"AvailabilityZone"}, "amazonaws.com"]]},
-          "\n",
-
-          "bash -c 'echo \"",
-          { "Ref": "MyFileSystem" },
-          ":/ /home/ubuntu/shared efs defaults,_netdev 0 0\" >> /etc/fstab'\n",
-          "OUT=$?\n",
-          "OUT2=2\n",
-          "if [ $OUT -ne 0 ];then\n",
-          "   bash -c 'echo \"",
-          {"Fn::Join": [".", [{"Ref":"MyFileSystem"}, "efs", {"Ref":"AvailabilityZone"}, "amazonaws.com"]]},
-          ":/ /home/ubuntu/shared nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev,noresvport 0 0\" >> /etc/fstab'\n",
-          "   OUT2=$?\n",
-          "fi\n",
-
-          "if [[ $OUT -ne 0 && $OUT2 -ne 0 ]];then\n",
-          "   echo 'Não foi possivel montar o sistema de arquivos na inicializaçao' > README\n",
-          "else\n",
-          "   mount -a\n",
-          "fi\n"
+          "apt-get -y install binutils\n"
         ]]}},
         "Tags":[
           {
@@ -548,9 +464,46 @@
         },
         "NetworkInterfaceId": {"Ref": "MasterNetworkInterface"}
       }
+    },
+    "MyComputeEIP": {
+      "Type" : "AWS::EC2::EIP",
+      "DependsOn": "Compute",
+      "Properties" : {
+        "InstanceId" : {"Ref": "Compute"},
+        "Domain": "vpc"
+      }
+    },
+    "MyComputeEIPAssociation": {
+      "Type": "AWS::EC2::EIPAssociation",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "MyComputeEIP",
+            "AllocationId"
+          ]
+        },
+        "NetworkInterfaceId": {"Ref": "ComputeNetworkInterface"}
+      }
     }
   },
   "Outputs": {
-
+    "MasterPublicIP": {
+      "Description": "Public IP Address of the Master host",
+      "Value": {
+        "Fn::GetAtt": [
+          "Master",
+          "PublicIp"
+        ]
+      }
+    },
+    "ComputePublicIP": {
+      "Description": "Public IP Address of the Master host",
+      "Value": {
+        "Fn::GetAtt": [
+          "Compute",
+          "PublicIp"
+        ]
+      }
+    }
   }
 }

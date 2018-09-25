@@ -60,3 +60,7 @@
 [2018-09-24 10:16:16,795] INFO     Starting the instance deployment from the template "../instances/c5.large.json"
 [2018-09-24 10:16:19,366] INFO     Instance deployed! Instance id: i-02708314dd8229278
 [2018-09-24 10:16:19,367] INFO     [ec2.Instance(id='i-02708314dd8229278')]
+[2018-09-25 12:47:37,000] INFO     Starting the instance deployment from the template "../instances/t2.micro.json"
+[2018-09-25 12:51:35,117] INFO     Starting the instance deployment from the template "../instances/t2.micro.json"
+[2018-09-25 12:51:38,217] INFO     Instance deployed! Instance id: i-0249de76fc32a74e2
+[2018-09-25 12:51:38,217] INFO     [ec2.Instance(id='i-0249de76fc32a74e2'), ec2.Instance(id='i-053df9f920b76fdda'), ec2.Instance(id='i-0792414ebb07099ea'), ec2.Instance(id='i-08c7ae1ff9057ec99')]

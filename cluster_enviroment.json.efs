@@ -1,0 +1,593 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AWS CloudFormation Sample Template cfncluster.cfn.json: Sample template showing an framework for deploying master + compute type clusters on AWS.  **WARNING** This template creates AWS resources. You will be billed for the AWS resources used if you create a stack from this template. Version: cfncluster-1.5.2",
+  "Parameters": {
+    "KeyName": {
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances using the default cluster user.",
+      "Type": "AWS::EC2::KeyPair::KeyName"
+    },
+    "Owner": {
+      "Description": "owner of the enviroment that will be created.",
+      "Type": "String",
+      "Default": "Default"
+    },
+    "MasterInstanceType": {
+      "Description": "MasterServer EC2 instance type",
+      "Type": "String",
+      "Default": "t2.micro",
+      "ConstraintDescription": "Must be a valid EC2 instance type, with support for HVM."
+    },
+    "ComputeInstanceType": {
+      "Description": "Compute EC2 instance type",
+      "Type": "String",
+      "Default": "t2.micro",
+      "ConstraintDescription": "Must be a valid EC2 instance type, with support for HVM."
+    },
+    "BaseOS": {
+      "Description": "Base OS type for cluster AMI",
+      "Type": "String",
+      "Default": "ubuntu1604",
+      "ConstraintDescription": "must be a supported base OS",
+      "AllowedValues": [
+        "ubuntu1604"
+      ]
+    },
+    "CustomAMI": {
+      "Description": "ID of a Custom AMI, to use instead of published AMI's",
+      "Type": "String",
+      "Default": "NONE",
+      "AllowedPattern": "(NONE|^ami-[0-9a-z]{8}$|^ami-[0-9a-z]{17}$)"
+    },
+    "AvailabilityZone": {
+      "Description": "Avalability zone to create resources",
+      "Type": "String",
+      "Default": "us-east-1a"
+    },
+    "VPCID": {
+      "Description": "ID of an existing ID VPC, to use instead of creating a new one. By default it will create a new VPC",
+      "Type": "String",
+      "Default": "NONE",
+    }
+  },
+  "Conditions": {
+    "CreateVPC": {
+      "Fn::Equals": [{"Ref": "VPCID"}, "NONE"]
+    },
+    "UseCustomAMI": {
+      "Fn::Not": [{"Fn::Equals": [{"Ref": "CustomAMI" }, "NONE"]}]
+    }
+  },
+  "Mappings": {
+    "AWSRegionOS2AMI": {
+      "ap-northeast-1": {
+        "ubuntu1604": "ami-02115cef40fbb46a4"
+      },
+      "ap-northeast-2": {
+        "ubuntu1604": "ami-02115cef40fbb46a4"
+      },
+      "ap-south-1": {
+        "ubuntu1604": "ami-00b7e666605d33085"
+      },
+      "ap-southeast-1": {
+        "ubuntu1604": "ami-03221428e6676db69"
+      },
+      "ap-southeast-2": {
+        "ubuntu1604": "ami-059b78064586da1b7"
+      },
+      "ca-central-1": {
+        "ubuntu1604": "ami-9526abf1"
+      },
+      "eu-central-1": {
+        "ubuntu1604": "ami-027583e616ca104df"
+      },
+      "eu-west-1": {
+        "ubuntu1604": "ami-0181f8d9b6f098ec4"
+      },
+      "eu-west-2": {
+        "ubuntu1604": "ami-c7ab5fa0"
+      },
+      "eu-west-3": {
+        "ubuntu1604": "ami-0370f4064dbc392b9"
+      },
+      "sa-east-1": {
+        "ubuntu1604": "ami-08b78b890b5a86161"
+      },
+      "us-east-1": {
+        "ubuntu1604": "ami-04169656fea786776"
+      },
+      "us-east-2": {
+        "ubuntu1604": "ami-0552e3455b9bc8d50"
+      },
+      "us-west-1": {
+        "ubuntu1604": "ami-059e7901352ebaef8"
+      },
+      "us-west-2": {
+        "ubuntu1604": "ami-51537029"
+      }
+    }
+  },
+  "Resources": {
+    "MyNewVPC": {
+      "Type" : "AWS::EC2::VPC",
+      "Condition": "CreateVPC",
+      "Properties" : {
+        "CidrBlock" : "10.0.0.0/20",
+        "EnableDnsSupport" : true,
+        "EnableDnsHostnames" : true,
+        "InstanceTenancy" : "default",
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join" : [ "-", [ {"Ref": "Owner"}, "vpc"] ]
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {"Ref": "Owner"}
+          }
+        ]
+      }
+    },
+    "MyInternetGateway": {
+      "Type" : "AWS::EC2::InternetGateway",
+      "Properties" : {
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join" : [ "-", [ {"Ref": "Owner"}, "igw"] ]
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {"Ref": "Owner"}
+          }
+        ]
+      }
+    },
+    "MyAttachment": {
+      "Type" : "AWS::EC2::VPCGatewayAttachment",
+      "DependsOn": ["MyInternetGateway"],
+      "Properties" : {
+        "InternetGatewayId" : {"Ref": "MyInternetGateway"},
+        "VpcId" : {"Fn::If":[
+          "CreateVPC",
+          {"Ref": "MyNewVPC"},
+          {"Ref": "VPCID"}
+        ]}
+      }
+    },
+    "MySubnet": {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : {"Fn::If":[
+          "CreateVPC",
+          {"Ref": "MyNewVPC"},
+          {"Ref": "VPCID"}
+        ]},
+        "AvailabilityZone" : {"Ref": "AvailabilityZone"},
+        "CidrBlock" : "10.0.0.0/24",
+        "MapPublicIpOnLaunch" : false,
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join" : [ "-", [ {"Ref": "Owner"}, "subnet"] ]
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {"Ref": "Owner"}
+          }
+        ]
+      }
+    },
+    "MyRouteTable": {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : {"Fn::If":[
+          "CreateVPC",
+          {"Ref": "MyNewVPC"},
+          {"Ref": "VPCID"}
+        ]},
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join" : [ "-", [ {"Ref": "Owner"}, "rtb"] ]
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {"Ref": "Owner"}
+          }
+        ]
+      }
+    },
+    "MyRoute":{
+      "Type" : "AWS::EC2::Route",
+      "DependsOn" : ["MyInternetGateway", "MyRouteTable"],
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "MyRouteTable" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "MyInternetGateway" }
+      }
+    },
+    "MyAssociation": {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "DependsOn": ["MyRouteTable", "MySubnet"],
+      "Properties" : {
+        "RouteTableId" : {"Ref": "MyRouteTable"},
+        "SubnetId" : {"Ref": "MySubnet"}
+      }
+    },
+    "MySecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable access to the Master host",
+        "VpcId": {"Fn::If":[
+          "CreateVPC",
+          {"Ref": "MyNewVPC"},
+          {"Ref": "VPCID"}
+        ]},
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "-1",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "-1",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "10.0.0.0/16"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags":[
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join" : [ "-", [ {"Ref": "Owner"}, "secGroup"] ]
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {"Ref": "Owner"}
+          }
+        ]
+      }
+    },
+    "MyPlacementGroup": {
+      "Type" : "AWS::EC2::PlacementGroup",
+      "Properties" : {
+        "Strategy" : "cluster"
+      }
+    },
+    "MasterNetworkInterface": {
+      "Type": "AWS::EC2::NetworkInterface",
+      "DependsOn": ["MySubnet", "MySecurityGroup"],
+      "Properties": {
+        "Description": "The network interface of the master instance",
+        "SubnetId": {"Ref": "MySubnet"},
+        "SourceDestCheck": "false",
+        "GroupSet": [{"Ref": "MySecurityGroup"}],
+        "Tags":[
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join" : [ "-", [ {"Ref": "Owner"}, "MnetI"] ]
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {"Ref": "Owner"}
+          }
+        ]
+      }
+    },
+    "ComputeNetworkInterface": {
+      "Type": "AWS::EC2::NetworkInterface",
+      "DependsOn": ["MySubnet", "MySecurityGroup"],
+      "Properties": {
+        "Description": "The network interface of the compute instance",
+        "SubnetId": {"Ref": "MySubnet"},
+        "SourceDestCheck": "false",
+        "GroupSet": [{"Ref": "MySecurityGroup"}],
+        "Tags":[
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join" : [ "-", [ {"Ref": "Owner"}, "CnetI"] ]
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {"Ref": "Owner"}
+          }
+        ]
+      }
+    },
+    "MyFileSystem": {
+      "Type" : "AWS::EFS::FileSystem",
+      "Properties" : {
+        "PerformanceMode" : "generalPurpose",
+        "ThroughputMode" : "bursting",
+        "FileSystemTags" : [
+          {
+            "Key":"Name",
+            "Value": {
+              "Fn::Join" : [ "-", [ {"Ref": "Owner"}, "efs"] ]
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {"Ref": "Owner"}
+          }
+        ]
+      }
+    },
+    "MyEFSMountTarget": {
+      "Type" : "AWS::EFS::MountTarget",
+      "DependsOn": ["MyFileSystem", "MySecurityGroup", "MySubnet"],
+      "Properties" : {
+        "FileSystemId" : {"Ref": "MyFileSystem"},
+        "SecurityGroups" : [ {"Ref": "MySecurityGroup"} ],
+        "SubnetId" : {"Ref":"MySubnet"}
+      }
+    },
+    "Master": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": ["MyPlacementGroup", "MasterNetworkInterface", "MyEFSMountTarget"],
+      "Properties": {
+        "InstanceType": { "Ref": "MasterInstanceType" },
+        "BlockDeviceMappings": [{
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeSize": 100,
+              "DeleteOnTermination": true,
+              "VolumeType": "gp2"
+            }
+          }
+        ],
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "NetworkInterfaces": [
+          {
+            "NetworkInterfaceId": {"Ref": "MasterNetworkInterface"},
+            "DeviceIndex": "0"
+          }
+        ],
+        "ImageId": {
+          "Fn::If": [
+            "UseCustomAMI",
+            {
+              "Ref": "CustomAMI"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSRegionOS2AMI",
+                {
+                  "Ref": "AWS::Region"
+                },
+                {
+                  "Ref": "BaseOS"
+                }
+              ]
+            }
+          ]
+        },
+        "EbsOptimized": false,
+        "PlacementGroupName": { "Ref": "MyPlacementGroup" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -xe\n",
+          "apt-get -y update\n",
+          "apt-get -y install nfs-common\n",
+          "apt-get -y install build-essential curl wget git\n",
+          "apt-get -y install binutils\n",
+
+          "git clone https://github.com/aws/efs-utils\n",
+          "cd efs-utils\n",
+          "./build-deb.sh\n",
+          "apt-get -y install ./build/amazon-efs-utils*deb\n",
+
+          "mkdir /home/ubuntu/shared\n",
+          "MYEFS_DNS=",
+          {"Fn::Join": [".", [{"Ref":"MyFileSystem"}, "efs", {"Ref":"AvailabilityZone"}, "amazonaws.com"]]},
+          "\n",
+
+          "bash -c 'echo \"",
+          { "Ref": "MyFileSystem" },
+          ":/ /home/ubuntu/shared efs defaults,_netdev 0 0\" >> /etc/fstab'\n",
+          "OUT=$?\n",
+          "OUT2=2\n",
+          "if [ $OUT -ne 0 ];then\n",
+          "   bash -c 'echo \"",
+          {"Fn::Join": [".", [{"Ref":"MyFileSystem"}, "efs", {"Ref":"AvailabilityZone"}, "amazonaws.com"]]},
+          ":/ /home/ubuntu/shared nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev,noresvport 0 0\" >> /etc/fstab'\n",
+          "   OUT2=$?\n",
+          "fi\n",
+
+          "if [[ $OUT -ne 0 && $OUT2 -ne 0 ]];then\n",
+          "   echo 'Não foi possivel montar o sistema de arquivos na inicializaçao' > README\n",
+          "else\n",
+          "   mount -a\n",
+          "fi\n"
+        ]]}},
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join" : [ "-", [ {"Ref": "Owner"}, "Master"] ]
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {"Ref": "Owner"}
+          }
+        ]
+      }
+    },
+    "Compute": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": ["MyPlacementGroup", "ComputeNetworkInterface", "MyEFSMountTarget"],
+      "Properties": {
+        "InstanceType": { "Ref": "ComputeInstanceType" },
+        "BlockDeviceMappings": [{
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeSize": 100,
+              "DeleteOnTermination": true,
+              "VolumeType": "gp2"
+            }
+          }
+        ],
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "NetworkInterfaces": [
+          {
+            "NetworkInterfaceId": {"Ref": "ComputeNetworkInterface"},
+            "DeviceIndex": "0"
+          }
+        ],
+        "ImageId": {
+          "Fn::If": [
+            "UseCustomAMI",
+            {
+              "Ref": "CustomAMI"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSRegionOS2AMI",
+                {
+                  "Ref": "AWS::Region"
+                },
+                {
+                  "Ref": "BaseOS"
+                }
+              ]
+            }
+          ]
+        },
+        "EbsOptimized": false,
+        "PlacementGroupName": { "Ref": "MyPlacementGroup" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -xe\n",
+          "apt-get -y update\n",
+          "apt-get -y install nfs-common\n",
+          "apt-get -y install build-essential curl wget git\n",
+          "apt-get -y install binutils\n",
+
+          "git clone https://github.com/aws/efs-utils\n",
+          "cd efs-utils\n",
+          "./build-deb.sh\n",
+          "apt-get -y install ./build/amazon-efs-utils*deb\n",
+
+          "mkdir /home/ubuntu/shared\n",
+          "MYEFS_DNS=",
+          {"Fn::Join": [".", [{"Ref":"MyFileSystem"}, "efs", {"Ref":"AvailabilityZone"}, "amazonaws.com"]]},
+          "\n",
+
+          "bash -c 'echo \"",
+          { "Ref": "MyFileSystem" },
+          ":/ /home/ubuntu/shared efs defaults,_netdev 0 0\" >> /etc/fstab'\n",
+          "OUT=$?\n",
+          "OUT2=2\n",
+          "if [ $OUT -ne 0 ];then\n",
+          "   bash -c 'echo \"",
+          {"Fn::Join": [".", [{"Ref":"MyFileSystem"}, "efs", {"Ref":"AvailabilityZone"}, "amazonaws.com"]]},
+          ":/ /home/ubuntu/shared nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev,noresvport 0 0\" >> /etc/fstab'\n",
+          "   OUT2=$?\n",
+          "fi\n",
+
+          "if [[ $OUT -ne 0 && $OUT2 -ne 0 ]];then\n",
+          "   echo 'Não foi possivel montar o sistema de arquivos na inicializaçao' > README\n",
+          "else\n",
+          "   mount -a\n",
+          "fi\n"
+        ]]}},
+        "Tags":[
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join" : [ "-", [ {"Ref": "Owner"}, "Compute"] ]
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {"Ref": "Owner"}
+          }
+        ]
+      }
+    },
+    "MyMasterEIP": {
+      "Type" : "AWS::EC2::EIP",
+      "DependsOn": "Master",
+      "Properties" : {
+        "InstanceId" : {"Ref": "Master"},
+        "Domain": "vpc"
+      }
+    },
+    "MyMasterEIPAssociation": {
+      "Type": "AWS::EC2::EIPAssociation",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "MyMasterEIP",
+            "AllocationId"
+          ]
+        },
+        "NetworkInterfaceId": {"Ref": "MasterNetworkInterface"}
+      }
+    },
+    "MyComputeEIP": {
+      "Type" : "AWS::EC2::EIP",
+      "DependsOn": "Compute",
+      "Properties" : {
+        "InstanceId" : {"Ref": "Compute"},
+        "Domain": "vpc"
+      }
+    },
+    "MyComputeEIPAssociation": {
+      "Type": "AWS::EC2::EIPAssociation",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "MyComputeEIP",
+            "AllocationId"
+          ]
+        },
+        "NetworkInterfaceId": {"Ref": "ComputeNetworkInterface"}
+      }
+    }
+  },
+  "Outputs": {
+    "MasterPublicIP": {
+      "Description": "Public IP Address of the Master host",
+      "Value": {
+        "Fn::GetAtt": [
+          "Master",
+          "PublicIp"
+        ]
+      }
+    },
+    "ComputePublicIP": {
+      "Description": "Public IP Address of the Master host",
+      "Value": {
+        "Fn::GetAtt": [
+          "Compute",
+          "PublicIp"
+        ]
+      }
+    },
+  }
+}

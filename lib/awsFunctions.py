@@ -1,5 +1,50 @@
 import boto3
-import os
+import os, sys
+import json
+
+def createEnviroment():
+    client = boto3.client('cloudformation')
+
+    # template = json.load(open('../cluster_enviroment.json', 'r'))
+
+    response = client.create_stack(
+        StackName="myFirstStack",
+        TemplateBody='file://home/hayashida/Documents/aws/lib/cluster_enviroment.json',
+        Parameters=[
+            {
+                'ParameterKey': 'KeyName',
+                'ParameterValue': 'willkey'
+            },
+            {
+                'ParameterKey': 'Owner',
+                'ParameterValue': 'will'
+            },
+            {
+                'ParameterKey': 'MasterInstanceType',
+                'ParameterValue': 'c5.large'
+            },
+            {
+                'ParameterKey': 'ComputeInstanceType',
+                'ParameterValue': 'c5.large'
+            },
+            {
+                'ParameterKey': 'BaseOS',
+                'ParameterValue': 'ubuntu1604'
+            },
+            {
+                'ParameterKey': 'CustomAMI',
+                'ParameterValue': 'ami-0ec6192b8b6c593b9'
+            },
+            {
+                'ParameterKey': 'AvailabilityZone',
+                'ParameterValue': 'us-east-1a'
+            },
+            {
+                'ParameterKey': 'VPCID',
+                'ParameterValue': 'vpc-04e161e891f4d14c2'
+            }
+        ]
+    )
 
 # *********************************************************
 # List EC2 instances

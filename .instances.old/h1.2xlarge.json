@@ -8,7 +8,7 @@
             "DeviceName": "/dev/sda1",
             "VirtualName": "eth0",
             "Ebs": {
-                "VolumeSize": 100,
+                "VolumeSize": 20,
                 "DeleteOnTermination": true,
                 "VolumeType": "gp2"
             },
@@ -26,5 +26,5 @@
         "Enabled": false
     },
     "InstanceInitiatedShutdownBehavior": "terminate",
-    "UserData": "$SHELL_SCRIPT$"
+    "UserData": "$SHELL_SCRIPT$"    
 }

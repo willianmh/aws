@@ -23,28 +23,34 @@
       "Default": "t2.micro",
       "ConstraintDescription": "Must be a valid EC2 instance type, with support for HVM."
     },
-    "BaseOS": {
-      "Description": "Base OS type for cluster AMI",
-      "Type": "String",
-      "Default": "ubuntu1604",
-      "ConstraintDescription": "must be a supported base OS",
-      "AllowedValues": [
-        "ubuntu1604"
-      ]
-    },
     "CustomAMI": {
       "Description": "ID of a Custom AMI, to use instead of published AMI's",
-      "Type": "String",
+      "Type": "AWS::EC2::Image::Id",
       "Default": "NONE",
       "AllowedPattern": "(NONE|^ami-[0-9a-z]{8}$|^ami-[0-9a-z]{17}$)"
     },
     "AvailabilityZone": {
       "Description": "Avalability zone to create resources",
-      "Type": "String",
+      "Type": "AWS::EC2::AvailabilityZone::Name",
       "Default": "us-east-1a"
+    },
+    "SubnetID": {
+      "Description": "ID of an existing ID VPC, to use instead of creating a new one. By default it will create a new VPC",
+      "Type": "AWS::EC2::Subnet::Id",
+      "Default": "NONE"
     },
     "VPCID": {
       "Description": "ID of an existing ID VPC, to use instead of creating a new one. By default it will create a new VPC",
+      "Type": "AWS::EC2::VPC::Id",
+      "Default": "NONE"
+    },
+    "InternetGatewayID": {
+      "Description": "ID of an existing Internet Gateway, to use instead of creating a new one. By default it will create a new VPC",
+      "Type": "String",
+      "Default": "NONE"
+    },
+    "SecurityGroupID": {
+      "Description": "ID of an existing Internet Gateway, to use instead of creating a new one. By default it will create a new VPC",
       "Type": "String",
       "Default": "NONE"
     }
@@ -53,8 +59,8 @@
     "CreateVPC": {
       "Fn::Equals": [{"Ref": "VPCID"}, "NONE"]
     },
-    "UseCustomAMI": {
-      "Fn::Not": [{"Fn::Equals": [{"Ref": "CustomAMI" }, "NONE"]}]
+    "CreateSubnet": {
+      "Fn::Equals": [{"Ref": "SubnetID"}, "NONE"]
     }
   },
   "Mappings": {
@@ -160,8 +166,9 @@
         ]}
       }
     },
-    "MySubnet": {
+    "MyNewSubnet": {
       "Type" : "AWS::EC2::Subnet",
+      "Condition":"CreateSubnet",
       "Properties" : {
         "VpcId" : {"Fn::If":[
           "CreateVPC",
@@ -187,6 +194,7 @@
     },
     "MyRouteTable": {
       "Type" : "AWS::EC2::RouteTable",
+      "Condition": "CreateSubnet",
       "Properties" : {
         "VpcId" : {"Fn::If":[
           "CreateVPC",
@@ -209,24 +217,30 @@
     },
     "MyRoute":{
       "Type" : "AWS::EC2::Route",
-      "Condition": "CreateVPC",
-      "DependsOn" : ["MyInternetGateway", "MyRouteTable"],
+      "Condition": "CreateSubnet",
+      "DependsOn" : ["MyRouteTable"],
       "Properties" : {
         "RouteTableId" : { "Ref" : "MyRouteTable" },
         "DestinationCidrBlock" : "0.0.0.0/0",
-        "GatewayId" : { "Ref" : "MyInternetGateway" }
+        "GatewayId" : {"Fn::If":[
+          "CreateVPC",
+          {"Ref":"MyInternetGateway"},
+          {"Ref":"InternetGatewayID"}
+        ]}
       }
     },
     "MyAssociation": {
       "Type" : "AWS::EC2::SubnetRouteTableAssociation",
-      "DependsOn": ["MyRouteTable", "MySubnet"],
+      "Condition": "CreateSubnet",
+      "DependsOn": ["MyRouteTable", "MyNewSubnet"],
       "Properties" : {
         "RouteTableId" : {"Ref": "MyRouteTable"},
-        "SubnetId" : {"Ref": "MySubnet"}
+        "SubnetId" : {"Ref": "MyNewSubnet"}
       }
     },
-    "MySecurityGroup": {
+    "MyNewSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
+      "Condition": "CreateVPC",
       "Properties": {
         "GroupDescription": "Enable access to the Master host",
         "VpcId": {"Fn::If":[
@@ -276,12 +290,23 @@
     },
     "MasterNetworkInterface": {
       "Type": "AWS::EC2::NetworkInterface",
-      "DependsOn": ["MySubnet", "MySecurityGroup"],
       "Properties": {
         "Description": "The network interface of the master instance",
-        "SubnetId": {"Ref": "MySubnet"},
+        "SubnetId": {
+          "Fn::If": [
+            "CreateSubnet",
+            {"Ref": "MyNewSubnet"},
+            {"Ref": "SubnetID"}
+          ]
+        },
         "SourceDestCheck": "false",
-        "GroupSet": [{"Ref": "MySecurityGroup"}],
+        "GroupSet": [{
+          "Fn::If": [
+            "CreateVPC",
+            {"Ref": "MyNewSecurityGroup"},
+            {"Ref": "SecurityGroupID"}
+          ]
+        }],
         "Tags":[
           {
             "Key": "Name",
@@ -298,12 +323,23 @@
     },
     "ComputeNetworkInterface": {
       "Type": "AWS::EC2::NetworkInterface",
-      "DependsOn": ["MySubnet", "MySecurityGroup"],
       "Properties": {
         "Description": "The network interface of the compute instance",
-        "SubnetId": {"Ref": "MySubnet"},
+        "SubnetId": {
+          "Fn::If": [
+            "CreateSubnet",
+            {"Ref": "MyNewSubnet"},
+            {"Ref": "SubnetID"}
+          ]
+        },
         "SourceDestCheck": "false",
-        "GroupSet": [{"Ref": "MySecurityGroup"}],
+        "GroupSet": [{
+          "Fn::If": [
+            "CreateVPC",
+            {"Ref": "MyNewSecurityGroup"},
+            {"Ref": "SecurityGroupID"}
+          ]
+        }],
         "Tags":[
           {
             "Key": "Name",
@@ -341,25 +377,7 @@
             "DeviceIndex": "0"
           }
         ],
-        "ImageId": {
-          "Fn::If": [
-            "UseCustomAMI",
-            {
-              "Ref": "CustomAMI"
-            },
-            {
-              "Fn::FindInMap": [
-                "AWSRegionOS2AMI",
-                {
-                  "Ref": "AWS::Region"
-                },
-                {
-                  "Ref": "BaseOS"
-                }
-              ]
-            }
-          ]
-        },
+        "ImageId": {"Ref": "CustomAMI"},
         "EbsOptimized": false,
         "PlacementGroupName": { "Ref": "MyPlacementGroup" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
@@ -406,25 +424,7 @@
             "DeviceIndex": "0"
           }
         ],
-        "ImageId": {
-          "Fn::If": [
-            "UseCustomAMI",
-            {
-              "Ref": "CustomAMI"
-            },
-            {
-              "Fn::FindInMap": [
-                "AWSRegionOS2AMI",
-                {
-                  "Ref": "AWS::Region"
-                },
-                {
-                  "Ref": "BaseOS"
-                }
-              ]
-            }
-          ]
-        },
+        "ImageId": {"Ref": "CustomAMI"},
         "EbsOptimized": false,
         "PlacementGroupName": { "Ref": "MyPlacementGroup" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
@@ -450,6 +450,14 @@
     }
   },
   "Outputs": {
+    "Masterid": {
+      "Description": "Master instance ID",
+      "Value": {"Ref": "Master"}
+    },
+    "Computeid": {
+      "Description": "Compute instance ID",
+      "Value": {"Ref": "Compute"}
+    },
     "MasterPublicIP": {
       "Description": "Public IP Address of the Master host",
       "Value": {

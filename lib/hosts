@@ -1,0 +1,13 @@
+127.0.0.1 localhost
+
+10.0.1.185 ip-10-0-1-185
+10.0.1.253 ip-10-0-1-253
+54.91.128.11 ip-10-0-1-185
+34.229.100.149 ip-10-0-1-253
+# The following lines are desirable for IPv6 capable hosts
+::1 ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts

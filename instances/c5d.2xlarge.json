@@ -16,9 +16,9 @@
         }
     ],
     "ImageId": "ami-0ec6192b8b6c593b9",
-    "MaxCount": 1,
+    "MaxCount": 4,
     "MinCount": 1,
-    "InstanceType": "h1.2xlarge",
+    "InstanceType": "c5d.2xlarge",
     "KeyName": "willkey",
     "SecurityGroupIds": ["sg-09bdec97b2c3a254c"],
     "SubnetId": "subnet-01cb22bf76f1a3db7",

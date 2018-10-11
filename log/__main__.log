@@ -64,3 +64,6 @@
 [2018-09-25 12:51:35,117] INFO     Starting the instance deployment from the template "../instances/t2.micro.json"
 [2018-09-25 12:51:38,217] INFO     Instance deployed! Instance id: i-0249de76fc32a74e2
 [2018-09-25 12:51:38,217] INFO     [ec2.Instance(id='i-0249de76fc32a74e2'), ec2.Instance(id='i-053df9f920b76fdda'), ec2.Instance(id='i-0792414ebb07099ea'), ec2.Instance(id='i-08c7ae1ff9057ec99')]
+[2018-10-08 17:56:38,774] INFO     Starting the instance deployment from the template "../instances/c5.xlarge.json"
+[2018-10-08 17:56:41,800] INFO     Instance deployed! Instance id: i-00569b788294e9304
+[2018-10-08 17:56:41,800] INFO     [ec2.Instance(id='i-00569b788294e9304'), ec2.Instance(id='i-0ca3200507c639a88'), ec2.Instance(id='i-0671820295690f399'), ec2.Instance(id='i-09f879f66e4548bed')]

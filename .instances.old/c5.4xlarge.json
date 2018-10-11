@@ -8,7 +8,7 @@
             "DeviceName": "/dev/sda1",
             "VirtualName": "eth0",
             "Ebs": {
-                "VolumeSize": 100,
+                "VolumeSize": 20,
                 "DeleteOnTermination": true,
                 "VolumeType": "gp2"
             },
@@ -18,7 +18,7 @@
     "ImageId": "ami-0ec6192b8b6c593b9",
     "MaxCount": 1,
     "MinCount": 1,
-    "InstanceType": "h1.2xlarge",
+    "InstanceType": "c5.4xlarge",
     "KeyName": "willkey",
     "SecurityGroupIds": ["sg-09bdec97b2c3a254c"],
     "SubnetId": "subnet-01cb22bf76f1a3db7",
@@ -26,5 +26,5 @@
         "Enabled": false
     },
     "InstanceInitiatedShutdownBehavior": "terminate",
-    "UserData": "$SHELL_SCRIPT$"
+    "UserData": "$SHELL_SCRIPT$"    
 }

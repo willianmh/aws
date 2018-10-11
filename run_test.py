@@ -4,6 +4,7 @@ import configparser
 import os
 from pathlib import Path
 import lib.awsFunctions as aws
+import time
 
 
 def launch_instances(path_to_instance, path_to_file):
@@ -48,7 +49,15 @@ def launch_instances(path_to_instance, path_to_file):
     machine_definitions['MinCount'] = int(cfg['instance']['MinCount'])
 
     instances = ec2.create_instances(**machine_definitions)
-    # get the instance id from the only (if only 1) created instance
+
+    ids = []
+    for i in range(len(instances)):
+        ids.append(instances[i].id)
+
+    waiter = client.get_waiter('instance_running')
+    waiter.wait(
+        InstanceIds=ids
+    )
     return instances
 
 
@@ -84,10 +93,7 @@ def getHosts(ids):
     return public_ips, private_ips, hostnames
 
 
-def config_instances(ids):
-    cfg = configparser.ConfigParser()
-    cfg.read('cfcluster.out')
-
+def config_host_alias(ids):
     public_ips, private_ips, hostnames = getHosts(ids)
 
     with open('hosts.old', 'r') as file:
@@ -105,16 +111,58 @@ def config_instances(ids):
 
 
 def main():
-    instances = launch_instances('instances/c5.xlarge.json', 'config/instances_cfg.ini')
+    print('starting instances')
+    path_to_instance = 'instances/c5.xlarge.json'
+    instances = launch_instances(path_to_instance, 'config/instances_cfg.ini')
+    print('instances launched!')
+
+    time.sleep(20)
+
     ids = []
     for i in range(len(instances)):
         ids.append(instances[i].id)
+    if os.path.basename(path_to_instance)[3] == 'x':
+        cores = 4
+    if os.path.basename(path_to_instance)[3] == '2':
+        cores = 8
+    if os.path.basename(path_to_instance)[3] == '4':
+        cores = 16
 
-    config_instances(ids)
-    files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh']
-    aws.transferFiles(ids, 'willkey.pem', files, 'ubuntu')
-    commands = ['echo 0 | sudo tee /proc/sys/kernel/yama/ptrace-scope', 'sudo mv ~/hosts /etc/hosts', './firstscript.sh']
+    total_cores = len(ids) * cores
+
+    config_host_alias(ids)
+    files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh', 'run_fwi.sh']
+    print('transfering files')
+    aws.uploadFiles(ids, 'willkey.pem', files, 'ubuntu')
+
+    commands = ['echo 0 | sudo tee cat /proc/sys/kernel/yama/ptrace_scope', 'sudo mv ~/hosts /etc/hosts']
+    print('executing commands')
     aws.executeCommands(ids, 'willkey.pem', commands)
 
+    print('running fwi with %d processes' % total_cores)
+    commands = ['chmod +x run_fwi.sh', 'chmod +x firstscript.sh', './run_fwi.sh ' + str(total_cores) + ' >> fwi.out']
+    aws.executeCommands(ids[:1], 'willkey.pem', commands)
+
+    instance_type = os.path.basename(path_to_instance).replace('.json', '')
+    result_dir = 'results/' + instance_type
+
+    if not os.path.exists(result_dir):
+        os.makedirs(result_dir)
+
+    remote_path = '/home/ubuntu/run_marmousi_template/inversion.out'
+    local_path = result_dir + '/inversion.out'
+    aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
+
+    remote_path = '/home/ubuntu/run_marmousi_template/modeling.out'
+    local_path = result_dir + '/modeling.out'
+    aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
+
+    ec2 = boto3.resource('ec2')
+    instance = ec2.Instance(ids[0])
+    ip = instance.public_ip_address
+
+    os.system('scp -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
+
+    aws.terminate_instances(ids)
 
 main()

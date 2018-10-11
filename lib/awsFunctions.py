@@ -5,12 +5,12 @@ import paramiko
 # import json
 
 
-
 def validateTemplate(TemplateBody):
     client = boto3.client('cloudformation')
 
     with open(TemplateBody, 'r') as f:
         response = client.validate_template(TemplateBody=f.read())
+
 
 def readConfigFile(configFile):
     config = configparser.ConfigParser()
@@ -61,7 +61,7 @@ def readConfigFile(configFile):
     return True, config
 
 
-def transferFiles(instancesids, path_to_key, paths_to_files, username):
+def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu'):
     ec2 = boto3.resource('ec2')
     public_ips = []
 
@@ -72,9 +72,9 @@ def transferFiles(instancesids, path_to_key, paths_to_files, username):
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    k = paramiko.RSAKey.from_private_key_file(path_to_key)
+    # k = paramiko.RSAKey.from_private_key_file(path_to_key)
     for ip in public_ips:
-        ssh_client.connect(hostname=ip, username=username, key_filename=k)
+        ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
 
         ftp_client = ssh_client.open_sftp()
         for path_to_file in paths_to_files:
@@ -84,7 +84,23 @@ def transferFiles(instancesids, path_to_key, paths_to_files, username):
     ssh_client.close()
 
 
-def executeCommands(instancesids, path_to_key, commands, args=[], username='ubuntu'):
+def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubuntu'):
+    ec2 = boto3.resource('ec2')
+    instance = ec2.Instance(instanceid)
+
+    ip = instance.public_ip_address
+
+    ssh_client = paramiko.SSHClient()
+    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
+
+    ftp_client = ssh_client.open_sftp()
+    ftp_client.get(remote_path, local_path)
+    ftp_client.close()
+    ssh_client.close()
+
+
+def executeCommands(instancesids, path_to_key, commands, username='ubuntu'):
     ec2 = boto3.resource('ec2')
     public_ips = []
 
@@ -94,12 +110,16 @@ def executeCommands(instancesids, path_to_key, commands, args=[], username='ubun
 
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    k = paramiko.RSAKey.from_private_key_file(path_to_key)
+
+    # k = paramiko.RSAKey.from_private_key_file(path_to_key)
     for ip in public_ips:
-        ssh_client.connect(hostname=ip, username=username, key_filename=k)
+        ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
         for command in commands:
             stdin, stdout, stderr = ssh_client.exec_command(command)
+            print(stdout.readlines())
+            print(stderr.readlines())
     ssh_client.close()
+
 
 def createEnviroment(configFile):
     client = boto3.client('cloudformation')
@@ -165,7 +185,7 @@ def createEnviroment(configFile):
 
     outputs = cloudformation.Stack(config['cloudformation']['StackName']).outputs
 
-    output_file = open('cfcluster.out', 'w')
+    output_file = open('cfncluster.out', 'w')
     config = configparser.ConfigParser()
 
     config.add_section('nodes')

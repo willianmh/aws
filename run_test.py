@@ -2,6 +2,7 @@ import boto3
 import json
 import configparser
 import os
+from pathlib import Path
 import lib.awsFunctions as aws
 
 
@@ -56,10 +57,17 @@ def getHosts(ids):
     public_ips = []
     private_ips = []
     hostnames = []
+    myfile = Path('public_ip')
+    if myfile.is_file():
+        os.remove('public_ip')
 
-    os.remove('public_ip')
-    os.remove('private_ip')
-    os.remove('hostname')
+    myfile = Path('private_ip')
+    if myfile.is_file():
+        os.remove('private_ip')
+
+    myfile = Path('hostname')
+    if myfile.is_file():
+        os.remove('hostname')
 
     for id in ids:
         instance = ec2.Instance(id)
@@ -97,10 +105,10 @@ def config_instances(ids):
 
 
 def main():
-    instances = launch_instances('instances/c5.xlarge.json', 'config/instances_cfg_ini')
+    instances = launch_instances('instances/c5.xlarge.json', 'config/instances_cfg.ini')
     ids = []
     for i in range(len(instances)):
-        ids.append(i.id)
+        ids.append(instances[i].id)
 
     config_instances(ids)
     files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh']

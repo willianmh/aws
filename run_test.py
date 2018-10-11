@@ -94,10 +94,10 @@ def config_instances(ids):
         lines = file.readlines()
 
     for i in range(len(public_ips)):
-        lines.insert(2, public_ips[i]+' '+hostnames[i]+'\n')
+        lines.insert(2, str(public_ips[i])+' '+str(hostnames[i])+'\n')
 
     for i in range(len(private_ips)):
-        lines.insert(2, private_ips[i]+' '+hostnames[i]+'\n')
+        lines.insert(2, str(private_ips[i])+' '+str(hostnames[i])+'\n')
 
     with open('hosts', 'w') as file:
         for line in lines:

@@ -5,7 +5,12 @@ import os
 import lib.awsFunctions as aws
 
 
-def launch_instances(instance_type, path_to_file):
+def launch_instances(path_to_instance, path_to_file):
+    """
+    path_to_instance: path for template file
+    path_to_file: path for configure file
+    """
+
     user_data = """#!/bin/bash
 """
     cfg = configparser.ConfigParser()
@@ -14,7 +19,7 @@ def launch_instances(instance_type, path_to_file):
     # Initialize the ec2 object
     ec2 = boto3.resource('ec2', region_name='us-east-1')
     client = boto3.client('ec2')
-    machine_definitions = json.load(open(instance_type, 'r'))
+    machine_definitions = json.load(open(path_to_instance, 'r'))
 
     if cfg['aws']['cluster'] == 'True':
         placement_groups = list(ec2.placement_groups.all())
@@ -92,17 +97,16 @@ def config_instances(ids):
 
 
 def main():
-    for instance_type in os.listdir('instances'):
-        instances = launch_instances(instance_type, 'config/instance_cfg_ini')
-        ids = []
-        for i in range(len(instances)):
-            ids.append(i.id)
+    instances = launch_instances('instances/c5.xlarge.json', 'config/instance_cfg_ini')
+    ids = []
+    for i in range(len(instances)):
+        ids.append(i.id)
 
-        config_instances(ids)
-        files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh']
-        aws.transferfile(ids, 'willkey.pem', files, 'ubuntu')
-        commands = ['echo 0 | sudo tee /proc/sys/kernel/yama/ptrace-scope', 'sudo mv ~/hosts /etc/hosts', './firstscript.sh']
-        aws.executeCommands(ids, 'willkey.pem', commands)
+    config_instances(ids)
+    files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh']
+    aws.transferfile(ids, 'willkey.pem', files, 'ubuntu')
+    commands = ['echo 0 | sudo tee /proc/sys/kernel/yama/ptrace-scope', 'sudo mv ~/hosts /etc/hosts', './firstscript.sh']
+    aws.executeCommands(ids, 'willkey.pem', commands)
 
 
 main()

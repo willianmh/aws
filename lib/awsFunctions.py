@@ -83,7 +83,7 @@ def transferfiles(instancesids, path_to_key, paths_to_files, username):
     ssh_client.close()
 
 
-def executeCommands(instancesids, path_to_key, commands, args=[], username='ubuntu@'):
+def executeCommands(instancesids, path_to_key, commands, args=[], username='ubuntu'):
     ec2 = boto3.resource('ec2')
     public_ips = []
 

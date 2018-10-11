@@ -97,7 +97,7 @@ def config_instances(ids):
 
 
 def main():
-    instances = launch_instances('instances/c5.xlarge.json', 'config/instance_cfg_ini')
+    instances = launch_instances('instances/c5.xlarge.json', 'config/instances_cfg_ini')
     ids = []
     for i in range(len(instances)):
         ids.append(i.id)

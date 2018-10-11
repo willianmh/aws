@@ -72,8 +72,9 @@ def transferFiles(instancesids, path_to_key, paths_to_files, username):
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
+    k = paramiko.RSAKey.from_private_key_file(path_to_key)
     for ip in public_ips:
-        ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
+        ssh_client.connect(hostname=ip, username=username, key_filename=k)
 
         ftp_client = ssh_client.open_sftp()
         for path_to_file in paths_to_files:
@@ -93,9 +94,9 @@ def executeCommands(instancesids, path_to_key, commands, args=[], username='ubun
 
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
+    k = paramiko.RSAKey.from_private_key_file(path_to_key)
     for ip in public_ips:
-        ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
+        ssh_client.connect(hostname=ip, username=username, key_filename=k)
         for command in commands:
             stdin, stdout, stderr = ssh_client.exec_command(command)
     ssh_client.close()

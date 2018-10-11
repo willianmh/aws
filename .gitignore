@@ -4,3 +4,4 @@ meteo-only
 ssh_aws_nas_machines
 accessKeys.csv
 *.pem
+results

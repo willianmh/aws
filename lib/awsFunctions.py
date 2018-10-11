@@ -61,7 +61,7 @@ def readConfigFile(configFile):
     return True, config
 
 
-def transferfiles(instancesids, path_to_key, paths_to_files, username):
+def transferFiles(instancesids, path_to_key, paths_to_files, username):
     ec2 = boto3.resource('ec2')
     public_ips = []
 

@@ -112,7 +112,7 @@ def main():
 
     config_instances(ids)
     files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh']
-    aws.transferfile(ids, 'willkey.pem', files, 'ubuntu')
+    aws.transferFiles(ids, 'willkey.pem', files, 'ubuntu')
     commands = ['echo 0 | sudo tee /proc/sys/kernel/yama/ptrace-scope', 'sudo mv ~/hosts /etc/hosts', './firstscript.sh']
     aws.executeCommands(ids, 'willkey.pem', commands)
 

@@ -142,14 +142,14 @@ def main():
     total_cores = len(ids) * cores
 
     config_host_alias(ids)
-    files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh', 'run_fwi.sh']
+    files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh', 'run_fwi.sh', 'ping.sh']
     aws.uploadFiles(ids, 'willkey.pem', files, 'ubuntu')
 
     commands = ['echo 0 | sudo tee cat /proc/sys/kernel/yama/ptrace_scope', 'sudo mv ~/hosts /etc/hosts']
     aws.executeCommands(ids, 'willkey.pem', commands)
 
     print('running fwi with %d processes' % total_cores)
-    commands = ['chmod +x run_fwi.sh', 'chmod +x firstscript.sh', './run_fwi.sh ' + str(total_cores) + ' >> fwi.out']
+    commands = ['chmod +x run_fwi.sh', 'chmod +x firstscript.sh', 'chmod +x ping.sh', './run_fwi.sh ' + str(total_cores) + ' >> fwi.out']
     stdout, stderr = aws.executeCommands(ids[:1], 'willkey.pem', commands)
 
     with open('test.log', 'w') as filelog:

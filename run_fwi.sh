@@ -7,11 +7,11 @@ TOTAL_CORES=$1
 echo "total cores: $TOTAL_CORES"
 ./firstscript.sh
 
-echo "ping"
+echo "pinging everyone to everyone"
 mkdir -p pings
 for host in $(cat private_ip)
 do
-  ping -c 15 $host >> pings/ping_$(hostname)_to_${host} &
+  ssh $host ./ping.sh
 done
 
 

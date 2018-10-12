@@ -145,6 +145,12 @@ def main():
     commands = ['chmod +x run_fwi.sh', 'chmod +x firstscript.sh', './run_fwi.sh ' + str(total_cores) + ' >> fwi.out']
     aws.executeCommands(ids[:1], 'willkey.pem', commands)
 
+    ec2 = boto3.resource('ec2')
+    instance = ec2.Instance(ids[0])
+    ip = instance.public_ip_address
+
+    # os.system('ssh -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
+
     instance_type = os.path.basename(path_to_instance).replace('.json', '')
     result_dir = 'results/' + instance_type
 
@@ -159,10 +165,6 @@ def main():
     remote_path = '/home/ubuntu/run_marmousi_template/modeling.out'
     local_path = result_dir + '/modeling.out'
     aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
-
-    ec2 = boto3.resource('ec2')
-    instance = ec2.Instance(ids[0])
-    ip = instance.public_ip_address
 
     os.system('scp -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
 

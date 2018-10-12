@@ -116,6 +116,8 @@ def executeCommands(instancesids, path_to_key, commands, username='ubuntu'):
         ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
         for command in commands:
             stdin, stdout, stderr = ssh_client.exec_command(command)
+            print(stdout.readlines())
+            print(stderr.readlines())
     ssh_client.close()
 
 

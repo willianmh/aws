@@ -122,8 +122,9 @@ def config_host_alias(ids):
 
 
 def main():
-    print('starting instances')
     for instance_type in os.listdir('instances'):
+
+        print('starting instances: %s' % instance_type)
         instances = launch_instances(os.path.join('instances/', instance_type), 'config/instances_cfg.ini')
         print('instances launched!')
 
@@ -160,6 +161,7 @@ def main():
         if not os.path.exists(result_dir):
             os.makedirs(result_dir)
 
+        print('dowloanding output files')
         remote_path = '/home/ubuntu/run_marmousi_template/inversion.out'
         local_path = result_dir + '/inversion.out'
         aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
@@ -173,7 +175,7 @@ def main():
         ip = instance.public_ip_address
 
         os.system('scp -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
-
+        print('everything downloaded')
         terminate_instances(ids)
         time.sleep(30)
 main()

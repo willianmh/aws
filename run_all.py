@@ -124,7 +124,7 @@ def config_host_alias(ids):
 def main():
     print('starting instances')
     for instance_type in os.listdir('instances'):
-        instances = launch_instances('instances/'+instance_type, 'config/instances_cfg.ini')
+        instances = launch_instances(os.path.join('instances/', instance_type), 'config/instances_cfg.ini')
         print('instances launched!')
 
         time.sleep(20)

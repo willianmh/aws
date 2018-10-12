@@ -152,9 +152,11 @@ def main():
 
     commands = ['echo 0 | sudo tee cat /proc/sys/kernel/yama/ptrace_scope', 'sudo mv ~/hosts /etc/hosts']
     aws.executeCommands(ids, 'willkey.pem', commands)
+    commands = ['chmod +x run_fwi.sh', 'chmod +x firstscript.sh', 'chmod +x ping.sh']
+    aws.executeCommands(ids, 'willkey.pem', commands)
 
     print('running fwi with %d processes' % total_cores)
-    commands = ['chmod +x run_fwi.sh', 'chmod +x firstscript.sh', 'chmod +x ping.sh', './run_fwi.sh ' + str(total_cores) + ' >> fwi.out']
+    commands = ['./run_fwi.sh ' + str(total_cores) + ' >> fwi.out']
     stdout, stderr = aws.executeCommands(ids[:1], 'willkey.pem', commands)
 
     with open('test.log', 'w') as filelog:

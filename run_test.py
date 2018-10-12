@@ -61,6 +61,18 @@ def launch_instances(path_to_instance, path_to_file):
     return instances
 
 
+def terminate_instances(ids):
+    client = boto3.client('ec2')
+
+    response = client.terminate_instances(
+        InstanceIds=ids
+    )
+    waiter = client.get_waiter('instance_terminated')
+    waiter.wait(
+        InstanceIds=ids
+    )
+
+
 def getHosts(ids):
     ec2 = boto3.resource('ec2')
     public_ips = []
@@ -165,9 +177,9 @@ def main():
     remote_path = '/home/ubuntu/run_marmousi_template/modeling.out'
     local_path = result_dir + '/modeling.out'
     aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
-
+    os.system('ssh-keyscan -H %s >> ~/.ssh/known_hosts' % ip)
     os.system('scp -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
 
-    aws.terminate_instances(ids)
+    terminate_instances(ids)
 
 main()

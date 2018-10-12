@@ -43,4 +43,4 @@ done
 cd run_marmousi_template
 echo "inversion"
 
-mpirun -n $TOTAL_CORES -f hostfile ../toy2dac/bin/toy2dac >> inversion.out
+mpirun -n $TOTAL_CORES -f hostfile -genv OMP_NUM_THREADS=1 -genv I_MPI_PIN_DOMAIN=omp ../toy2dac/bin/toy2dac >> inversion.out

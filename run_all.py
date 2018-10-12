@@ -123,9 +123,9 @@ def config_host_alias(ids):
 
 def main():
     for instance_type in os.listdir('instances'):
-
-        print('starting instances: %s' % instance_type)
-        instances = launch_instances(os.path.join('instances/', instance_type), 'config/instances_cfg.ini')
+        path_to_instance = os.path.join('instances/', instance_type)
+        print('starting instances: %s' % path_to_instance)
+        instances = launch_instances(path_to_instance, 'config/instances_cfg.ini')
         print('instances launched!')
 
         time.sleep(20)
@@ -176,6 +176,6 @@ def main():
 
         os.system('scp -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
         print('everything downloaded')
-        terminate_instances(ids)
+        # terminate_instances(ids)
         time.sleep(30)
 main()

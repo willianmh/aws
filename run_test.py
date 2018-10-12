@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import lib.awsFunctions as aws
 import time
-
+import sys
 
 def launch_instances(path_to_instance, path_to_file):
     """
@@ -112,7 +112,9 @@ def config_host_alias(ids):
 
 def main():
     print('starting instances')
-    path_to_instance = 'instances/c5.xlarge.json'
+
+    path_to_instance = sys.argv[1]
+    # path_to_instance = 'instances/c5.xlarge.json'
     instances = launch_instances(path_to_instance, 'config/instances_cfg.ini')
     print('instances launched!')
 

@@ -151,6 +151,7 @@ def main():
     if not os.path.exists(result_dir):
         os.makedirs(result_dir)
 
+    print('downloading files')
     remote_path = '/home/ubuntu/run_marmousi_template/inversion.out'
     local_path = result_dir + '/inversion.out'
     aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)

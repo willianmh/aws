@@ -11,7 +11,7 @@ TOTAL_CORES=$1
 mkdir -p pings
 for host in $(cat private_ip)
 do
-  ping -c 15 >> pings/ping_$(hostname)_to_${host} &
+  ping -c 15 $host >> pings/ping_$(hostname)_to_${host} &
 done
 
 

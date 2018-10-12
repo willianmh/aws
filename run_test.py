@@ -181,7 +181,7 @@ def main():
     os.system('./get_pings.sh')
     # os.system('scp -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
 
-    # terminate_instances(ids)
-    time.sleep(10)
+    terminate_instances(ids)
+    time.sleep(20)
 
 main()

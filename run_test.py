@@ -177,12 +177,8 @@ def main():
 
     ip = instances[0].public_ip_address
 
-    for instance in instances:
-        os.system('ssh-keygen -R %s' % instance.public_ip_address)
-        os.system('ssh-keyscan -H %s >> ~/.ssh/known_hosts' % instance.public_ip_address)
-        os.system('mkdir -p %s' % result_dir+'/pings')
-        os.system('scp -r -i "willkey.pem" ubuntu@%s:pings/* %s' % (instance.public_ip_address, result_dir+'/pings'))
-
+    os.system('mkdir -p %s' % result_dir+'/pings')
+    os.system('./get_pings.sh')
     # os.system('scp -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
 
     # terminate_instances(ids)

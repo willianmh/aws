@@ -7,6 +7,7 @@ import lib.awsFunctions as aws
 import time
 import sys
 
+
 def launch_instances(path_to_instance, path_to_file):
     """
     path_to_instance: path for template file
@@ -32,6 +33,7 @@ def launch_instances(path_to_instance, path_to_file):
                     not_exist = False
 
         if not_exist:
+            print('creating placement_group: %s' % cfg['aws']['placement'])
             response = client.create_placement_group(
                 GroupName=cfg['aws']['placement'],
                 Strategy='cluster'
@@ -48,6 +50,7 @@ def launch_instances(path_to_instance, path_to_file):
     machine_definitions['MaxCount'] = int(cfg['instance']['MaxCount'])
     machine_definitions['MinCount'] = int(cfg['instance']['MinCount'])
 
+    print('starting %d %s' % (int(cfg['instance']['MaxCount']), path_to_instance))
     instances = ec2.create_instances(**machine_definitions)
 
     ids = []
@@ -58,6 +61,7 @@ def launch_instances(path_to_instance, path_to_file):
     waiter.wait(
         InstanceIds=ids
     )
+    print('instances launched!')
     return instances
 
 
@@ -72,6 +76,7 @@ def terminate_instances(ids):
         InstanceIds=ids
     )
     print('instances terminated')
+
 
 def getHosts(ids):
     ec2 = boto3.resource('ec2')
@@ -124,11 +129,8 @@ def config_host_alias(ids):
 
 def main():
     path_to_instance = sys.argv[1]
-    print('starting instances')
-    print(path_to_instance)
     # path_to_instance = 'instances/c5.xlarge.json'
     instances = launch_instances(path_to_instance, 'config/instances_cfg.ini')
-    print('instances launched!')
 
     time.sleep(20)
 
@@ -141,19 +143,19 @@ def main():
 
     config_host_alias(ids)
     files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh', 'run_fwi.sh']
-    print('transfering files')
     aws.uploadFiles(ids, 'willkey.pem', files, 'ubuntu')
 
     commands = ['echo 0 | sudo tee cat /proc/sys/kernel/yama/ptrace_scope', 'sudo mv ~/hosts /etc/hosts']
-    print('executing commands')
     aws.executeCommands(ids, 'willkey.pem', commands)
 
     print('running fwi with %d processes' % total_cores)
     commands = ['chmod +x run_fwi.sh', 'chmod +x firstscript.sh', './run_fwi.sh ' + str(total_cores) + ' >> fwi.out']
-    aws.executeCommands(ids[:1], 'willkey.pem', commands)
+    stdout, stderr = aws.executeCommands(ids[:1], 'willkey.pem', commands)
+
+    with open('test.log', 'w') as filelog:
+        filelog.writelines(stdout)
 
     ip = instances[0].public_ip_address
-
     # os.system('ssh -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
 
     instance_type = os.path.basename(path_to_instance).replace('.json', '')
@@ -162,7 +164,6 @@ def main():
     if not os.path.exists(result_dir):
         os.makedirs(result_dir)
 
-    print('downloading files')
     remote_path = '/home/ubuntu/run_marmousi_template/inversion.out'
     local_path = result_dir + '/inversion.out'
     aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
@@ -170,10 +171,12 @@ def main():
     remote_path = '/home/ubuntu/run_marmousi_template/modeling.out'
     local_path = result_dir + '/modeling.out'
     aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
+
+    os.system('ssh-keygen -R %s' % ip)
     os.system('ssh-keyscan -H %s >> ~/.ssh/known_hosts' % ip)
     os.system('scp -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
 
-    terminate_instances(ids)
+    # terminate_instances(ids)
     time.sleep(10)
 
 main()

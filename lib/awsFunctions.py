@@ -71,7 +71,7 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu'):
 
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
+    print('uploanding files')
     # k = paramiko.RSAKey.from_private_key_file(path_to_key)
     for ip in public_ips:
         ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
@@ -93,7 +93,7 @@ def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubu
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
-
+    print('downloading files')
     ftp_client = ssh_client.open_sftp()
     ftp_client.get(remote_path, local_path)
     ftp_client.close()
@@ -103,22 +103,26 @@ def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubu
 def executeCommands(instancesids, path_to_key, commands, username='ubuntu'):
     ec2 = boto3.resource('ec2')
     public_ips = []
-
+    output = []
+    output_err = []
     for id in instancesids:
         instance = ec2.Instance(id)
         public_ips.append(instance.public_ip_address)
 
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
+    print('executing commands')
     # k = paramiko.RSAKey.from_private_key_file(path_to_key)
     for ip in public_ips:
         ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
         for command in commands:
+            print('executing commmand: %s' % command)
             stdin, stdout, stderr = ssh_client.exec_command(command)
-            print(stdout.readlines())
-            print(stderr.readlines())
+            output.append(stdout.readlines())
+            output_err.append(stderr.readlines())
     ssh_client.close()
+
+    return output, output_err
 
 
 def createEnviroment(configFile):

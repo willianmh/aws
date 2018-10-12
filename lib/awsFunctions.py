@@ -84,11 +84,13 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu'):
                     ftp_client.put(path_to_file, '/home/ubuntu/'+file)
                 ftp_client.close()
                 ssh_client.close()
+                print('upload success!')
                 break
             except Exception as e:
                 print(e)
                 print('trying again')
                 continue
+
 
 def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubuntu'):
     ec2 = boto3.resource('ec2')

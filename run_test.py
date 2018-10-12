@@ -158,7 +158,8 @@ def main():
     stdout, stderr = aws.executeCommands(ids[:1], 'willkey.pem', commands)
 
     with open('test.log', 'w') as filelog:
-        filelog.writelines(stdout)
+        for line in stdout:
+            filelog.write(str(line))
 
     # os.system('ssh -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
 

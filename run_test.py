@@ -182,4 +182,5 @@ def main():
 
     terminate_instances(ids)
 
+
 main()

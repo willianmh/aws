@@ -63,7 +63,7 @@ def launch_instances(path_to_instance, path_to_file):
 
 def terminate_instances(ids):
     client = boto3.client('ec2')
-
+    print('terminating instances')
     response = client.terminate_instances(
         InstanceIds=ids
     )
@@ -71,7 +71,7 @@ def terminate_instances(ids):
     waiter.wait(
         InstanceIds=ids
     )
-
+    print('instances terminated')
 
 def getHosts(ids):
     ec2 = boto3.resource('ec2')
@@ -123,9 +123,9 @@ def config_host_alias(ids):
 
 
 def main():
-    print('starting instances')
-
     path_to_instance = sys.argv[1]
+    print('starting instances')
+    print(path_to_instance)
     # path_to_instance = 'instances/c5.xlarge.json'
     instances = launch_instances(path_to_instance, 'config/instances_cfg.ini')
     print('instances launched!')
@@ -135,13 +135,8 @@ def main():
     ids = []
     for i in range(len(instances)):
         ids.append(instances[i].id)
-    if os.path.basename(path_to_instance)[3] == 'x':
-        cores = 4
-    if os.path.basename(path_to_instance)[3] == '2':
-        cores = 8
-    if os.path.basename(path_to_instance)[3] == '4':
-        cores = 16
 
+    cores = instances[0].cpu_options['CoreCount'] * instances[0].cpu_options['ThreadsPerCore']
     total_cores = len(ids) * cores
 
     config_host_alias(ids)
@@ -157,9 +152,7 @@ def main():
     commands = ['chmod +x run_fwi.sh', 'chmod +x firstscript.sh', './run_fwi.sh ' + str(total_cores) + ' >> fwi.out']
     aws.executeCommands(ids[:1], 'willkey.pem', commands)
 
-    ec2 = boto3.resource('ec2')
-    instance = ec2.Instance(ids[0])
-    ip = instance.public_ip_address
+    ip = instances[0].public_ip_address
 
     # os.system('ssh -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
 
@@ -181,6 +174,6 @@ def main():
     os.system('scp -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
 
     terminate_instances(ids)
-
+    time.sleep(10)
 
 main()

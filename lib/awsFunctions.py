@@ -74,15 +74,21 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu'):
     print('uploanding files')
     # k = paramiko.RSAKey.from_private_key_file(path_to_key)
     for ip in public_ips:
-        ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
-
-        ftp_client = ssh_client.open_sftp()
-        for path_to_file in paths_to_files:
-            file = os.path.basename(path_to_file)
-            ftp_client.put(path_to_file, '/home/ubuntu/'+file)
-        ftp_client.close()
-    ssh_client.close()
-
+        n_attempts = 2
+        for attempts in range(n_attempts):
+            try:
+                ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
+                ftp_client = ssh_client.open_sftp()
+                for path_to_file in paths_to_files:
+                    file = os.path.basename(path_to_file)
+                    ftp_client.put(path_to_file, '/home/ubuntu/'+file)
+                ftp_client.close()
+                ssh_client.close()
+                break
+            except Exception as e:
+                print(e)
+                print('trying again')
+                continue
 
 def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubuntu'):
     ec2 = boto3.resource('ec2')

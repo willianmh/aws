@@ -130,8 +130,8 @@ def config_host_alias(ids):
 def main():
     path_to_instance = sys.argv[1]
     # path_to_instance = 'instances/c5.xlarge.json'
+    print('starting program')
     instances = launch_instances(path_to_instance, 'config/instances_cfg.ini')
-
     time.sleep(20)
 
     ids = []
@@ -140,6 +140,11 @@ def main():
 
     cores = instances[0].cpu_options['CoreCount'] * instances[0].cpu_options['ThreadsPerCore']
     total_cores = len(ids) * cores
+    print('total cores: %d' % total_cores)
+
+    ip = instances[0].public_ip_address
+    os.system('ssh-keygen -R %s' % ip)
+    os.system('ssh-keyscan -H %s >> ~/.ssh/known_hosts' % ip)
 
     config_host_alias(ids)
     files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh', 'run_fwi.sh', 'ping.sh']
@@ -155,7 +160,6 @@ def main():
     with open('test.log', 'w') as filelog:
         filelog.writelines(stdout)
 
-    ip = instances[0].public_ip_address
     # os.system('ssh -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
 
     instance_type = os.path.basename(path_to_instance).replace('.json', '')
@@ -172,8 +176,6 @@ def main():
     local_path = result_dir + '/modeling.out'
     aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
 
-    os.system('ssh-keygen -R %s' % ip)
-    os.system('ssh-keyscan -H %s >> ~/.ssh/known_hosts' % ip)
     os.system('scp -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
 
     # terminate_instances(ids)

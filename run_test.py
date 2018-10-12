@@ -142,10 +142,6 @@ def main():
     total_cores = len(ids) * cores
     print('total cores: %d' % total_cores)
 
-    ip = instances[0].public_ip_address
-    os.system('ssh-keygen -R %s' % ip)
-    os.system('ssh-keyscan -H %s >> ~/.ssh/known_hosts' % ip)
-
     config_host_alias(ids)
     files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh', 'run_fwi.sh', 'ping.sh']
     aws.uploadFiles(ids, 'willkey.pem', files, 'ubuntu')
@@ -179,7 +175,14 @@ def main():
     local_path = result_dir + '/modeling.out'
     aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
 
-    os.system('scp -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
+    ip = instances[0].public_ip_address
+
+    for instance in instances:
+        os.system('ssh-keygen -R %s' % ip)
+        os.system('ssh-keyscan -H %s >> ~/.ssh/known_hosts' % ip)
+        os.system('scp -r -i "willkey.pem" ubuntu@%s:pings/* %s' % (instance.public_ip, result_dir+'/pings'))
+
+    # os.system('scp -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
 
     # terminate_instances(ids)
     time.sleep(10)

@@ -11,7 +11,7 @@ do
 	echo '' >> $OUTPUT_FILE
 done
 
-grep 'results_cl_1' $OUTPUT_FILE | sed 's/results_cl_1\///g' > $DIR/a
+grep 'results_*' $OUTPUT_FILE | sed 's/results_*\///g' > $DIR/a
 grep 'Average' $OUTPUT_FILE > $DIR/b
 
 sed -i 's/|[^|]*$//;s/ //g;s/Average|//;s/[|].*$//g' $DIR/b

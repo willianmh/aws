@@ -5,6 +5,7 @@ source /opt/intel/parallel_studio_xe_2018.3.051/bin/psxevars.sh
 
 TOTAL_CORES=$1
 N_ITERATIONS=$2
+OMP=$((${TOTAL_CORES}/4))
 echo "total cores: $TOTAL_CORES"
 ./firstscript.sh
 

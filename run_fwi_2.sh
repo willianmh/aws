@@ -4,6 +4,7 @@ source /opt/intel/compilers_and_libraries_2018.3.222/linux/bin/compilervars.sh -
 source /opt/intel/parallel_studio_xe_2018.3.051/bin/psxevars.sh
 
 TOTAL_CORES=$1
+POSFIX=$2
 OMP=$((${TOTAL_CORES}/4))
 echo "total cores: $TOTAL_CORES"
 ./firstscript.sh
@@ -29,7 +30,7 @@ sed -i 's/1            ! mode of the code (0 = MODELING, 1 = INVERSION)/0       
 
 ulimit -s 65536
 
-mpirun -n 4 ../toy2dac/bin/toy2dac >> modeling.out
+mpirun -n 4 ../toy2dac/bin/toy2dac >> modeling_${POSFIX}.out
 
 sed -i 's/vp_Marmousi_exact qp rho/vp_Marmousi_init qp rho/' fdfd_input
 sed -i 's/0            ! mode of the code (0 = MODELING, 1 = INVERSION)/1            ! mode of the code (0 = MODELING, 1 = INVERSION)/' toy2dac_input

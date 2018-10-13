@@ -4,7 +4,7 @@ source /opt/intel/compilers_and_libraries_2018.3.222/linux/bin/compilervars.sh -
 source /opt/intel/parallel_studio_xe_2018.3.051/bin/psxevars.sh
 
 TOTAL_CORES=$1
-POSFIX=$2
+N_ITERATIONS=$2
 echo "total cores: $TOTAL_CORES"
 ./firstscript.sh
 
@@ -15,8 +15,11 @@ do
   ssh $host ./ping.sh
 done
 
-for i in `seq 1 ${POSFIX}`
+echo "*** case 1 ***"
+
+for i in `seq 1 ${N_ITERATIONS}`
 do
+  echo "iteration $i"
   cd ~/
   rm -r run_ball*
   rm -r run_marmousi*
@@ -49,8 +52,11 @@ do
   mpirun -n $TOTAL_CORES -f hostfile -genv OMP_NUM_THREADS=1 -genv I_MPI_PIN_DOMAIN=omp ../toy2dac/bin/toy2dac >> ~/inversion_1_${i}.out
 done
 
-for i in `seq 1 ${POSFIX}`
+echo "*** case 2 ***"
+
+for i in `seq 1 ${N_ITERATIONS}`
 do
+  echo "iteration $i"
   cd ~/
 
   rm -r run_ball*

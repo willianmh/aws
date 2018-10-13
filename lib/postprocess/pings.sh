@@ -1,5 +1,5 @@
 #!/bin/bash
-
+OUTPUT_FILE='latencies.out'
 
 for folder in $(ls)
 do
@@ -7,15 +7,22 @@ do
   ls $(sed 's/\_[^\_]*$//' <<< ${BASE} )* > IPS
   sed -i 's/^.*\_[^\_]/1/' IPS
 
+  echo $folder | tr '\n' ',' >> ${OUTPUT_FILE}
+  for j in $(cat IPS)
+  do
+    echo $j | tr '\n' ',' >> ${OUTPUT_FILE}
+  done
+
+  echo '' >> ${OUTPUT_FILE}
+
   for i in $(cat IPS)
   do
+    echo $i | tr '\n' ',' >> ${OUTPUT_FILE}
     for j in $(cat IPS)
     do
-      i_aux=$(sed 's/\./-/g' <<< $i)
-
+      i_aux=$(sed 's/\./-/g' <<< $i) # 10-0-0-95
+      AVG_PING=$(grep avg ping_ip-${i_aux}_to_${j} | sed -e 's/^.*= //' -e 's/^[^\/]*\///g' -e 's/[\/].*$//')
+      echo ${AVG_PING} | tr '\n' ',' >> $OUTPUT_FILE
     done
   done
 done
-
-
-ping_ip-10-0-0-241_to_10.0.0.241

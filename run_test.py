@@ -42,7 +42,7 @@ def launch_instances(path_to_instance, path_to_file):
 
     if 'tenancy' in cfg['aws']:
         machine_definitions['Placement']['Tenancy'] = 'host'
-        machine_definitions['Placement']['HostID'] = cfg['aws']['hostdID']
+        machine_definitions['Placement']['HostId'] = cfg['aws']['hostdID']
         machine_definitions['Placement']['Affinity'] = 'Host'
 
     # Opening json with definitions from the first argument

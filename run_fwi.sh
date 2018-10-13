@@ -51,6 +51,7 @@ do
   echo "inversion"
 
   mpirun -n $TOTAL_CORES -f hostfile -genv OMP_NUM_THREADS=1 -genv I_MPI_PIN_DOMAIN=omp ../toy2dac/bin/toy2dac >> ~/inversion_1_${i}.out
+  sleep(1)
 done
 
 echo "*** case 2 ***"
@@ -89,4 +90,5 @@ do
   echo "inversion"
 
   mpirun -n 4 -ppn 1 -genv OMP_NUM_THREADS=${OMP} -genv I_MPI_PIN_DOMAIN=omp -f hostfile ../toy2dac/bin/toy2dac >> ~/inversion_2_${i}.out
+  sleep(1)
 done

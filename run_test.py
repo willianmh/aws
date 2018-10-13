@@ -172,7 +172,7 @@ def main():
         os.makedirs(result_dir)
 
     for i in range(1, 3):
-        for j in n_iterations:
+        for j in range(1, n_iterations+1):
             remote_path = '/home/ubuntu/inversion_'+str(i)+'_'+str(j)+'.out'
             local_path = result_dir + '/inversion_'+str(i)+'_'+str(j)+'.out'
             aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)

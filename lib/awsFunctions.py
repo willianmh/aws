@@ -2,6 +2,7 @@ import boto3
 import os
 import configparser
 import paramiko
+import time
 # import json
 
 
@@ -74,7 +75,7 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu'):
     print('uploanding files')
     # k = paramiko.RSAKey.from_private_key_file(path_to_key)
     for ip in public_ips:
-        n_attempts = 2
+        n_attempts = 4
         for attempts in range(n_attempts):
             try:
                 ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
@@ -89,6 +90,7 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu'):
             except Exception as e:
                 print(e)
                 print('trying again')
+                time.sleep(1)
                 continue
 
 

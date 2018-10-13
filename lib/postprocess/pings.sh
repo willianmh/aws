@@ -1,7 +1,9 @@
 #!/bin/bash
-OUTPUT_FILE='latencies.out'
 
-for folder in $(ls)
+PATH_TO_DIR=$1
+OUTPUT_FILE=${PATH_TO_DIR}/latencies.out
+
+for folder in $(ls ${PATH_TO_DIR})
 do
   BASE=$(ls "${folder}/pings" | tail -n 1)
   ls $(sed 's/\_[^\_]*$//' <<< ${BASE} )* > IPS

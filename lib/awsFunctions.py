@@ -85,7 +85,7 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu'):
                     ftp_client.put(path_to_file, '/home/ubuntu/'+file)
                 ftp_client.close()
                 ssh_client.close()
-                print('upload success!')
+                print('upload success on %s!' % str(ip))
                 break
             except Exception as e:
                 print(e)

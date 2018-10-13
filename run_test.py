@@ -40,6 +40,11 @@ def launch_instances(path_to_instance, path_to_file):
             )
         machine_definitions['Placement']['GroupName'] = cfg['aws']['placement']
 
+    if 'tenancy' in cfg['aws']:
+        machine_definitions['Placement']['Tenancy'] = 'host'
+        machine_definitions['Placement']['HostID'] = cfg['aws']['hostdID']
+        machine_definitions['Placement']['Affinity'] = 'Host'
+
     # Opening json with definitions from the first argument
     machine_definitions['UserData'] = user_data
 
@@ -151,37 +156,33 @@ def main():
     commands = ['chmod +x run_fwi_2.sh', 'chmod +x firstscript.sh', 'chmod +x ping.sh']
     aws.executeCommands(ids, 'willkey.pem', commands)
 
-    print('running fwi with %d processes' % total_cores)
-    commands = ['./run_fwi_2.sh ' + str(total_cores)]
-    stdout, stderr = aws.executeCommands(ids[:1], 'willkey.pem', commands)
-
-    with open('test.log', 'w') as filelog:
-        for line in stdout:
-            filelog.write(str(line))
-
-    # os.system('ssh -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
-
-    instance_type = os.path.basename(path_to_instance).replace('.json', '')
-    result_dir = 'results/' + instance_type
-
-    if not os.path.exists(result_dir):
-        os.makedirs(result_dir)
-
-    remote_path = '/home/ubuntu/run_marmousi_template/inversion.out'
-    local_path = result_dir + '/inversion.out'
-    aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
-
-    remote_path = '/home/ubuntu/run_marmousi_template/modeling.out'
-    local_path = result_dir + '/modeling.out'
-    aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
-
-    ip = instances[0].public_ip_address
-
-    os.system('mkdir -p %s' % result_dir+'/pings')
-    os.system('./get_pings.sh %s' % result_dir+'/pings')
-    # os.system('scp -r -i "willkey.pem" ubuntu@%s:pings %s' % (ip, result_dir))
-
-    terminate_instances(ids)
+    # print('running fwi with %d processes' % total_cores)
+    # commands = ['./run_fwi_2.sh ' + str(total_cores)]
+    # stdout, stderr = aws.executeCommands(ids[:1], 'willkey.pem', commands)
+    #
+    # with open('test.log', 'w') as filelog:
+    #     for line in stdout:
+    #         filelog.write(str(line))
+    #
+    # instance_type = os.path.basename(path_to_instance).replace('.json', '')
+    # result_dir = 'results/' + instance_type
+    #
+    # if not os.path.exists(result_dir):
+    #     os.makedirs(result_dir)
+    #
+    # remote_path = '/home/ubuntu/run_marmousi_template/inversion.out'
+    # local_path = result_dir + '/inversion.out'
+    # aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
+    #
+    # remote_path = '/home/ubuntu/run_marmousi_template/modeling.out'
+    # local_path = result_dir + '/modeling.out'
+    # aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
+    #
+    # os.system('mkdir -p %s' % result_dir+'/pings')
+    # os.system('./get_pings.sh %s' % result_dir+'/pings')
+    #
+    # terminate_instances(ids)
     time.sleep(20)
+
 
 main()

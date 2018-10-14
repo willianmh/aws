@@ -1,0 +1,44 @@
+{
+    "EbsOptimized": false,
+    "Placement": {
+      "GroupName": ""
+    },
+    "BlockDeviceMappings": [
+        {
+            "DeviceName": "/dev/sda1",
+            "VirtualName": "eth0",
+            "Ebs": {
+                "VolumeSize": 100,
+                "DeleteOnTermination": true,
+                "VolumeType": "gp2"
+            },
+            "NoDevice":""
+        }
+    ],
+    "ImageId": "ami-0ec6192b8b6c593b9",
+    "MaxCount": 4,
+    "MinCount": 1,
+    "InstanceType": "c5.18xlarge",
+    "KeyName": "willkey",
+    "SecurityGroupIds": ["sg-09bdec97b2c3a254c"],
+    "SubnetId": "subnet-01cb22bf76f1a3db7",
+    "Monitoring": {
+        "Enabled": false
+    },
+    "InstanceInitiatedShutdownBehavior": "terminate",
+    "UserData": "$SHELL_SCRIPT$",
+    "TagSpecifications": [
+      {"ResourceType": "instance",
+      "Tags":[
+          {
+            "Key": "owner",
+            "Value": "will"
+          },
+          {
+            "Key": "ignore",
+            "Value": "true"
+          }
+        ]
+      }
+    ]
+}

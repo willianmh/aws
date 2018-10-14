@@ -36,7 +36,7 @@ def launch_instances(path_to_instance, path_to_file):
             print('creating placement_group: %s' % cfg['aws']['placement'])
             response = client.create_placement_group(
                 GroupName=cfg['aws']['placement'],
-                Strategy='spread'
+                Strategy=cfg['aws']['strategy']
             )
         machine_definitions['Placement']['GroupName'] = cfg['aws']['placement']
 

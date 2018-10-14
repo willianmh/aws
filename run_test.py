@@ -158,35 +158,35 @@ def main():
     commands = ['chmod +x run_fwi.sh', 'chmod +x firstscript.sh', 'chmod +x ping.sh']
     aws.executeCommands(ids, 'willkey.pem', commands)
 
-    # print('running fwi with %d processes' % total_cores)
-    # commands = ['./run_fwi.sh ' + str(total_cores) + ' ' + str(n_iterations)]
-    # stdout, stderr = aws.executeCommands(ids[:1], 'willkey.pem', commands)
-    #
-    # with open('test.log', 'w') as filelog:
-    #     for line in stdout:
-    #         filelog.write(str(line))
-    #
-    # instance_type = os.path.basename(path_to_instance).replace('.json', '')
-    # result_dir = 'results/' + instance_type
-    #
-    # if not os.path.exists(result_dir):
-    #     os.makedirs(result_dir)
-    #
-    # for i in range(1, 3):
-    #     for j in range(1, n_iterations+1):
-    #         remote_path = '/home/ubuntu/inversion_'+str(i)+'_'+str(j)+'.out'
-    #         local_path = result_dir + '/inversion_'+str(i)+'_'+str(j)+'.out'
-    #         aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
-    #
-    #         remote_path = '/home/ubuntu/modeling_'+str(i)+'_'+str(j)+'.out'
-    #         local_path = result_dir + '/modeling_'+str(i)+'_'+str(j)+'.out'
-    #         aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
-    #
-    # os.system('mkdir -p %s' % result_dir+'/pings')
-    # os.system('./get_pings.sh %s' % result_dir+'/pings')
-    #
-    # terminate_instances(ids)
-    # time.sleep(20)
+    print('running fwi with %d processes' % total_cores)
+    commands = ['./run_fwi.sh ' + str(total_cores) + ' ' + str(n_iterations)]
+    stdout, stderr = aws.executeCommands(ids[:1], 'willkey.pem', commands)
+
+    with open('test.log', 'w') as filelog:
+        for line in stdout:
+            filelog.write(str(line))
+
+    instance_type = os.path.basename(path_to_instance).replace('.json', '')
+    result_dir = 'results/' + instance_type
+
+    if not os.path.exists(result_dir):
+        os.makedirs(result_dir)
+
+    for i in range(1, 3):
+        for j in range(1, n_iterations+1):
+            remote_path = '/home/ubuntu/inversion_'+str(i)+'_'+str(j)+'.out'
+            local_path = result_dir + '/inversion_'+str(i)+'_'+str(j)+'.out'
+            aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
+
+            remote_path = '/home/ubuntu/modeling_'+str(i)+'_'+str(j)+'.out'
+            local_path = result_dir + '/modeling_'+str(i)+'_'+str(j)+'.out'
+            aws.downloadFile(ids[0], 'willkey.pem', remote_path, local_path)
+
+    os.system('mkdir -p %s' % result_dir+'/pings')
+    os.system('./get_pings.sh %s' % result_dir+'/pings')
+
+    terminate_instances(ids)
+    time.sleep(20)
 
 
 main()

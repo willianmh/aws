@@ -75,7 +75,7 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu'):
     print('uploanding files')
     # k = paramiko.RSAKey.from_private_key_file(path_to_key)
     for ip in public_ips:
-        n_attempts = 4
+        n_attempts = 5
         for attempts in range(n_attempts):
             try:
                 ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)

@@ -10,10 +10,11 @@ do
   # iterate under each item in dir
   for folder in $(ls ${DIR})
   do
-    if [ -d "$folder" ]
+    if [ -d "${DIR}/$folder" ]
     then
       for j in `seq 1 5`
       do
+        echo $folder
         echo ${DIR}/$folder  >> $OUTPUT_FILE
     	  cat ${DIR}/${folder}/inversion_${i}_${j}.out | tail -n 350 | sed -e '/summary/,$!d' -e '/END OF PROGRAM/,+1 d' >> $OUTPUT_FILE
     	  echo '' >> $OUTPUT_FILE

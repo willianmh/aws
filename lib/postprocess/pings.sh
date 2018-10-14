@@ -43,3 +43,4 @@ do
 done
 
 sed -i 's/.$//g' $OUTPUT_FILE
+rm IPS

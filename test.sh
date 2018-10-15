@@ -2,8 +2,8 @@
 
 var=$1
 
-for i in `seq 1 $var`	
+for i in 1 2 4 6 8 12 24 48	
 do
-	echo $i
+	echo "MPI: $((48/$i)) | OMP: $i"
 done
 

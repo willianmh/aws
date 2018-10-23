@@ -3,7 +3,7 @@
 DIR=$1
 
 # generate one file for each case (1 & 2)
-for i in `seq 1 2`
+for i in 1 2 4 6 8 12 24 48
 do
   OUTPUT_FILE=$DIR/all_times_${i}
   rm $OUTPUT_FILE

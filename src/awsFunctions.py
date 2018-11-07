@@ -8,22 +8,22 @@ import datetime
 from pathlib import Path
 
 
-class Logger:
-    def __init__(self):
-        self.debug = False
-
-    def write(self, s):
-        print(datetime.datetime.now() + " " + s)
-
-    def debug(self, s):
-        if self.debug:
-            self.write(s)
+# class Logger:
+#     def __init__(self):
+#         self.debug = False
+#
+#     def write(self, s):
+#         print(datetime.datetime.now() + " " + s)
+#
+#     def debug(self, s):
+#         if self.debug:
+#             self.write(s)
+# debug = False
+# log = Logger()
+# log.debug = debug
 
 basedir = os.getcwd().split('aws',1)[0] + 'aws'
 
-debug = False
-log = Logger()
-log.debug = debug
 
 # *********************************************************
 # Broadcast
@@ -43,7 +43,7 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu', n_
 
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    log.write('uploanding files')
+    print('uploanding files')
     # k = paramiko.RSAKey.from_private_key_file(path_to_key)
     for ip in public_ips:
         for attempts in range(n_attempts):
@@ -55,11 +55,11 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu', n_
                     ftp_client.put(path_to_file, '/home/ubuntu/'+file)
                 ftp_client.close()
                 ssh_client.close()
-                log.write('upload success on %s!' % str(ip))
+                print('upload success on %s!' % str(ip))
                 break
             except Exception as e:
-                log.write(e)
-                log.write('trying again')
+                print(e)
+                print('trying again')
                 time.sleep(1)
                 continue
 
@@ -80,7 +80,7 @@ def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubu
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
-    log.write('downloading files')
+    print('downloading files')
     ftp_client = ssh_client.open_sftp()
     ftp_client.get(remote_path, local_path)
     ftp_client.close()
@@ -105,12 +105,12 @@ def executeCommands(instancesids, path_to_key, commands, username='ubuntu'):
 
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    log.write('executing commands')
+    print('executing commands')
     # k = paramiko.RSAKey.from_private_key_file(path_to_key)
     for ip in public_ips:
         ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
         for command in commands:
-            log.write('executing commmand: %s' % command)
+            print('executing commmand: %s' % command)
             stdin, stdout, stderr = ssh_client.exec_command(command)
             output.append(stdout.readlines())
             output_err.append(stderr.readlines())
@@ -147,7 +147,7 @@ def launch_instances(path_to_instance, path_to_file):
     machine_definitions = json.load(open(path_to_instance, 'r'))
 
     if cfg['placement']['enable'] == 'True' and cfg['tenancy']['enable'] == 'True':
-        log.write('Error in definitions. You must select between placement and tenancy')
+        print('Error in definitions. You must select between placement and tenancy')
         exit()
 
     # Launch Instances on Placement
@@ -161,7 +161,7 @@ def launch_instances(path_to_instance, path_to_file):
                     not_exist = False
 
         if not_exist:
-            log.write('creating placement_group: %s' % cfg['placement']['name'])
+            print('creating placement_group: %s' % cfg['placement']['name'])
             response = client.create_placement_group(
                 GroupName=cfg['placement']['name'],
                 Strategy=cfg['placement']['strategy']
@@ -182,7 +182,7 @@ def launch_instances(path_to_instance, path_to_file):
     machine_definitions['MaxCount'] = int(cfg['instance']['MaxCount'])
     machine_definitions['MinCount'] = int(cfg['instance']['MinCount'])
 
-    log.write('starting %d %s' % (int(cfg['instance']['MaxCount']), path_to_instance))
+    print('starting %d %s' % (int(cfg['instance']['MaxCount']), path_to_instance))
     instances = ec2.create_instances(**machine_definitions)
 
     # get all IDs
@@ -202,7 +202,7 @@ def launch_instances(path_to_instance, path_to_file):
         for id in ids:
             id_file.write(str(id) + '\n')
 
-    log.write('instances launched!')
+    print('instances launched!')
     return instances, ids
 
 # *********************************************************
@@ -212,7 +212,7 @@ def launch_instances(path_to_instance, path_to_file):
 
 def terminate_instances(ids):
     client = boto3.client('ec2')
-    log.write('terminating instances')
+    print('terminating instances')
     response = client.terminate_instances(
         InstanceIds=ids
     )
@@ -220,7 +220,7 @@ def terminate_instances(ids):
     waiter.wait(
         InstanceIds=ids
     )
-    log.write('instances terminated')
+    print('instances terminated')
 
 # *****************************************************************************************
 #
@@ -232,7 +232,7 @@ def terminate_instances(ids):
 def validateTemplate(TemplateBody):
     client = boto3.client('cloudformation')
 
-    log.write('Validating template.')
+    print('Validating template.')
     log.debug('Template: ' + str(TemplateBody))
     with open(TemplateBody, 'r') as f:
         response = client.validate_template(TemplateBody=f.read())
@@ -242,28 +242,28 @@ def readConfigFile(configFile):
     config = configparser.ConfigParser()
     config.read(configFile)
 
-    log.write('Reading configure file.')
+    print('Reading configure file.')
     log.debug('File: ' + str(configFile))
 
     if 'Template' not in config['cloudformation']:
-        log.write("You must specify a template")
+        print("You must specify a template")
         return False, {}
 
     if 'StackName' not in config['cloudformation']:
-        log.write("You must specify a stack name")
+        print("You must specify a stack name")
         return False, {}
 
     if 'Owner' not in config['user']:
-        log.write("Must specify an owner")
+        print("Must specify an owner")
         return False, {}
 
     if 'KeyName' not in config['user']:
-        log.write("Must specify a keypair")
+        print("Must specify a keypair")
         return False, {}
 
 
     if 'CustomAMI' not in config['aws']:
-        log.write("You must specify an IMAGE")
+        print("You must specify an IMAGE")
         return False, {}
 
     if 'MasterInstanceType' not in config['aws']:
@@ -294,19 +294,19 @@ def readConfigFile(configFile):
         config['aws']['SecurityGroupID'] = 'NONE'
     log.debug('Security Group: ' + config['aws']['SecurityGroupID'])
 
-    log.write('Configure file read!')
+    print('Configure file read!')
     return True, config
 
 def createCloudEnviroment(configFile):
     client = boto3.client('cloudformation')
     cloudformation = boto3.resource('cloudformation')
 
-    log.write('Initializing...')
+    print('Initializing...')
 
     response, config = readConfigFile(configFile)
     if response:
         validateTemplate(basedir + "/templates/" + config['cloudformation']['Template'])
-        log.write('Creating Stack')
+        print('Creating Stack')
         with open(basedir + "/templates/" + config['cloudformation']['template'], 'r') as template:
 
             stack = cloudformation.create_stack(
@@ -360,7 +360,7 @@ def createCloudEnviroment(configFile):
             waiter.wait(
                 StackName=config['cloudformation']['StackName']
             )
-            log.write('Stack completed')
+            print('Stack completed')
 
             outputs = cloudformation.Stack(config['cloudformation']['StackName']).outputs
 
@@ -455,7 +455,7 @@ def startInstance(instance_id):
         waiter.wait(
             InstanceIds=[instance.id]
         )
-        log.write("intances are running")
+        print("intances are running")
     return instance
 
 # Stop Instance
@@ -473,7 +473,7 @@ def stopInstance(instance_id):
         waiter.wait(
             InstanceIds=[instance.id]
         )
-        log.write("intances are stopped")
+        print("intances are stopped")
         return True
     return False
 
@@ -526,23 +526,23 @@ def dettachVolume(instance_id, volume_id):
 
 def startVisualization(instance_id, volume_id, pem_key):
     instance = startInstance(instance_id)
-    log.write(instance)
+    print(instance)
     if instance:
         if attachVolume(instance_id, volume_id):
             os.system('ssh -i "%s" ubuntu@%s mkdir /home/ubuntu/shared' % (pem_key, instance.public_ip_address))
             os.system('ssh -i "%s" ubuntu@%s sudo mount /dev/nvme1n1 /home/ubuntu/shared' % (pem_key, instance.public_ip_address))
 
-            log.write("Instance %s is running and mounted to volume %s." % (instance_id, volume_id))
-            log.write("Connect to instance with the following IP:")
-            log.write("%s" % instance.public_ip_address)
+            print("Instance %s is running and mounted to volume %s." % (instance_id, volume_id))
+            print("Connect to instance with the following IP:")
+            print("%s" % instance.public_ip_address)
         else:
-            log.write("Volume is already attached to some instance")
+            print("Volume is already attached to some instance")
 
 
 def stopVisualization(instance_id, volume_id):
     if dettachVolume(instance_id=instance_id, volume_id=volume_id):
-        log.write("Volume dettached")
+        print("Volume dettached")
         if stopInstance(instance_id=instance_id):
-            log.write("Instance stopped")
+            print("Instance stopped")
             return True
     return False

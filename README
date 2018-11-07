@@ -4,16 +4,9 @@ A fantastic tool to setup and automate test on AWS cloud enviroment using python
 
 ## Getting Started
 
-First, you need an AWS account. These scripts were made with python and bash.
+You need an AWS account and python installed
 
 ### Prerequisites
-
-To use boto3, you need awscli. Install it, and configure with you secret access key and ID.
-
-```bash
-sudo apt-get install awscli
-aws configure
-```
 
 You need boto3, paramiko and configparser packages installed on your machine
 
@@ -21,34 +14,18 @@ You need boto3, paramiko and configparser packages installed on your machine
 pip install boto3 paramiko configparser
 ```
 
-The main function will need two file, the first one is a configure file and the second one a instance template file.
-In this repository the files are on _instances_ and _config_ folder.
-The configure file has priority, so it will overwrite the definitions on template file.
+There is a folder _instances_ with some templates that will be used to define the instances.
 
-Basically, the instance template is a file to define the instance type to be launched. If you look on the _instances_ folder, you'll see that the templates are all the same, except the instance type.
+## Running the tests
 
-## Usage
+You must
 
-Edit configure file and template file and run.
+### Break down into end to end tests
 
-```bash
-python3 run.py 'path_to_template' 'path_to_configure_file' 'path_to_pem_key'
-```
-
-Example:
-
-```bash
-python3 run.py 'instances/c5.xlarge.json' 'config/instances_cfg.ini' 'mykey.pem'
-```
-
-### Understanding
-
-Once you've executed run.py, it will create 4 files.
+Explain what these tests test and why
 
 ```
-public_ip
-private_ip
-
+Give an example
 ```
 
 ### And coding style tests

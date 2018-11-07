@@ -3,12 +3,31 @@ import os
 import configparser
 import paramiko
 import time
+import datetime
 # import json
 
+
+class Logger:
+    def __init__(self):
+        self.debug = False
+
+    def write(self, s):
+        print(datetime.datetime.now() + " " + s)
+
+    def debug(self, s):
+        if self.debug:
+            self.write(s)
+
+basedir = os.getcwd().split('aws',1)[0] + 'aws
+debug = False
+
+log = Logger()
 
 def validateTemplate(TemplateBody):
     client = boto3.client('cloudformation')
 
+    log.write('Validating template.')
+    log.debug('Template: ' + str(TemplateBody))
     with open(TemplateBody, 'r') as f:
         response = client.validate_template(TemplateBody=f.read())
 
@@ -17,49 +36,140 @@ def readConfigFile(configFile):
     config = configparser.ConfigParser()
     config.read(configFile)
 
+    log.write('Reading configure file.')
+    log.debug('File: ' + str(configFile))
+
     if 'Template' not in config['cloudformation']:
-        print("You must specify a template")
+        log.write("You must specify a template")
         return False, {}
 
     if 'StackName' not in config['cloudformation']:
-        print("You must specify a stack name")
+        log.write("You must specify a stack name")
         return False, {}
 
     if 'Owner' not in config['user']:
-        print("Must specify an owner")
+        log.write("Must specify an owner")
         return False, {}
 
     if 'KeyName' not in config['user']:
-        print("Must specify a keypair")
+        log.write("Must specify a keypair")
         return False, {}
 
 
     if 'CustomAMI' not in config['aws']:
-        print("You must specify an IMAGE")
+        log.write("You must specify an IMAGE")
         return False, {}
 
     if 'MasterInstanceType' not in config['aws']:
         config['aws']['MasterInstanceType'] = 'c5.large'
+    log.debug('Master Instance Type: ' + config['aws']['MasterInstanceType'])
 
     if 'ComputeInstanceType' not in config['aws']:
         config['aws']['ComputeInstanceType'] = 'c5.large'
+    log.debug('Compute Instance Type: ' + config['aws']['ComputeInstanceType'])
 
     if 'AvailabilityZone' not in config['aws']:
         config['aws']['AvailabilityZone'] = 'us-east-1a'
+    log.debug('Availability Zone: ' + config['aws']['AvailabilityZone'])
 
     if 'VPCID' not in config['aws']:
         config['aws']['VPCID'] = 'NONE'
+    log.debug('VPC Id: ' + config['aws']['VPCID'])
 
     if 'SubnetID' not in config['aws']:
         config['aws']['SubnetID'] = 'NONE'
+    log.debug('Subnet: ' + config['aws']['SubnetID'])
 
     if 'InternetGatewayID' not in config['aws']:
         config['aws']['InternetGatewayID'] = 'NONE'
+    log.debug('Internet Gateway Id: ' + config['aws']['InternetGatewayID'])
 
     if 'SecurityGroupID' not in config['aws']:
         config['aws']['SecurityGroupID'] = 'NONE'
+    log.debug('Security Group: ' + config['aws']['SecurityGroupID'])
 
+    log.write('Configure file read!')
     return True, config
+
+def createCloudEnviroment(configFile):
+    client = boto3.client('cloudformation')
+    cloudformation = boto3.resource('cloudformation')
+
+    log.write('Initializing...')
+
+    response, config = readConfigFile(configFile)
+    if response:
+        validateTemplate(basedir + "/templates/" + config['cloudformation']['Template'])
+        log.write('Creating Stack')
+        with open(basedir + "/templates/" + config['cloudformation']['template'], 'r') as template:
+
+            stack = cloudformation.create_stack(
+                StackName=config['cloudformation']['stackName'],
+                TemplateBody=template.read(),
+                Parameters=[
+                    {
+                    'ParameterKey': 'KeyName',
+                    'ParameterValue': config['user']['KeyName']
+                    },
+                    {
+                    'ParameterKey': 'Owner',
+                    'ParameterValue': config['user']['Owner']
+                    },
+                    {
+                    'ParameterKey': 'MasterInstanceType',
+                    'ParameterValue': config['aws']['MasterInstanceType']
+                    },
+                    {
+                    'ParameterKey': 'ComputeInstanceType',
+                    'ParameterValue': config['aws']['ComputeInstanceType']
+                    },
+                    {
+                    'ParameterKey': 'CustomAMI',
+                    'ParameterValue': config['aws']['CustomAMI']
+                    },
+                    {
+                    'ParameterKey': 'AvailabilityZone',
+                    'ParameterValue': config['aws']['AvailabilityZone']
+                    },
+                    {
+                    'ParameterKey' : 'SubnetID',
+                    'ParameterValue': config['aws']['SubnetID']
+                    },
+                    {
+                    'ParameterKey': 'VPCID',
+                    'ParameterValue': config['aws']['VPCID']
+                    },
+                    {
+                    'ParameterKey': 'InternetGatewayID',
+                    'ParameterValue': config['aws']['InternetGatewayID']
+                    },
+                    {
+                    'ParameterKey': 'SecurityGroupID',
+                    'ParameterValue': config['aws']['SecurityGroupID']
+                    }
+                ]
+            )
+            log.debug('Stack launched, waiting to complete...')
+            waiter = client.get_waiter('stack_create_complete')
+            waiter.wait(
+                StackName=config['cloudformation']['StackName']
+            )
+            log.write('Stack completed')
+
+            outputs = cloudformation.Stack(config['cloudformation']['StackName']).outputs
+
+            output_file = open('cfncluster.out', 'w')
+            config = configparser.ConfigParser()
+
+            config.add_section('nodes')
+
+            for output in list(outputs):
+                config.set('nodes', output['OutputKey'], output['OutputValue'])
+
+            config.write(output_file)
+            output_file.close()
+
+            return cloudformation.Stack(config['cloudformation']['StackName']).outputs, stack
 
 
 def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu'):
@@ -134,83 +244,6 @@ def executeCommands(instancesids, path_to_key, commands, username='ubuntu'):
 
     return output, output_err
 
-
-def createEnviroment(configFile):
-    client = boto3.client('cloudformation')
-    cloudformation = boto3.resource('cloudformation')
-
-    response, config = readConfigFile(configFile)
-    if response:
-        validateTemplate("../templates/"+config['cloudformation']['Template'])
-
-        with open("../templates/"+config['cloudformation']['template'], 'r') as template:
-
-            stack = cloudformation.create_stack(
-                StackName=config['cloudformation']['stackName'],
-                TemplateBody=template.read(),
-                Parameters=[
-                    {
-                        'ParameterKey': 'KeyName',
-                        'ParameterValue': config['user']['KeyName']
-                    },
-                    {
-                        'ParameterKey': 'Owner',
-                        'ParameterValue': config['user']['Owner']
-                    },
-                    {
-                        'ParameterKey': 'MasterInstanceType',
-                        'ParameterValue': config['aws']['MasterInstanceType']
-                    },
-                    {
-                        'ParameterKey': 'ComputeInstanceType',
-                        'ParameterValue': config['aws']['ComputeInstanceType']
-                    },
-                    {
-                        'ParameterKey': 'CustomAMI',
-                        'ParameterValue': config['aws']['CustomAMI']
-                    },
-                    {
-                        'ParameterKey': 'AvailabilityZone',
-                        'ParameterValue': config['aws']['AvailabilityZone']
-                    },
-                    {
-                        'ParameterKey' : 'SubnetID',
-                        'ParameterValue': config['aws']['SubnetID']
-                    },
-                    {
-                        'ParameterKey': 'VPCID',
-                        'ParameterValue': config['aws']['VPCID']
-                    },
-                    {
-                        'ParameterKey': 'InternetGatewayID',
-                        'ParameterValue': config['aws']['InternetGatewayID']
-                    },
-                    {
-                        'ParameterKey': 'SecurityGroupID',
-                        'ParameterValue': config['aws']['SecurityGroupID']
-                    }
-                ]
-            )
-
-        waiter = client.get_waiter('stack_create_complete')
-        waiter.wait(
-            StackName=config['cloudformation']['StackName']
-        )
-
-    outputs = cloudformation.Stack(config['cloudformation']['StackName']).outputs
-
-    output_file = open('cfncluster.out', 'w')
-    config = configparser.ConfigParser()
-
-    config.add_section('nodes')
-
-    for output in list(outputs):
-        config.set('nodes', output['OutputKey'], output['OutputValue'])
-
-    config.write(output_file)
-    output_file.close()
-
-    return cloudformation.Stack(config['cloudformation']['StackName']).outputs, stack
 
 
 # *********************************************************

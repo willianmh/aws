@@ -53,6 +53,11 @@
       "Description": "ID of an existing Internet Gateway, to use instead of creating a new one. By default it will create a new VPC",
       "Type": "String",
       "Default": "NONE"
+    },
+    "SnapshotID": {
+      "Description": "ID of an snapshot to create EBS volume",
+      "Type": "String",
+      "Defaul": "NONE"
     }
   },
   "Conditions": {
@@ -288,6 +293,28 @@
         "Strategy" : "cluster"
       }
     },
+    "MyNewVolume": {
+      "Type":"AWS::EC2::Volume",
+      "Properties" : {
+        "AvailabilityZone" : {"Ref": "AvailabilityZone"},
+        "Encrypted" : false,
+        "Size" : 500,
+        "SnapshotId" : {"Ref": "SnapshotID"},
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join" : [ "-", [ {"Ref": "Owner"}, "volume"] ]
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {"Ref": "Owner"}
+          }
+        ],
+        "VolumeType" : "st1"
+      }
+    },
     "MasterNetworkInterface": {
       "Type": "AWS::EC2::NetworkInterface",
       "Properties": {
@@ -299,7 +326,7 @@
             {"Ref": "SubnetID"}
           ]
         },
-        "SourceDestCheck": "false",
+        "SourceDestCheck": false,
         "GroupSet": [{
           "Fn::If": [
             "CreateVPC",
@@ -457,6 +484,10 @@
     "Computeid": {
       "Description": "Compute instance ID",
       "Value": {"Ref": "Compute"}
+    },
+    "Volumeid": {
+      "Description": "Volume ID",
+      "Value": {"Ref": "MyNewVolume"}
     },
     "MasterPublicIP": {
       "Description": "Public IP Address of the Master host",

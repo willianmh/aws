@@ -20,8 +20,9 @@ You need boto3, paramiko and configparser packages installed on your machine
 ```bash
 pip install boto3 paramiko configparser
 ```
+### important
 
-The main function will need two file, the first one is a configure file and the second one a instance template file.
+The main function will need two file, a configure file and a instance template file.
 In this repository the files are on _instances_ and _config_ folder.
 The configure file has priority, so it will overwrite the definitions on template file.
 
@@ -48,16 +49,28 @@ Once you've executed run.py, it will create 4 files.
 ```
 public_ip
 private_ip
-
+hostname
+hosts
 ```
 
-### And coding style tests
+The _hosts_ file is important to run mpi application, it must be moved to /etc/hosts.
+The script will edit _hosts.old_ and add the necessary lines.
+Don't worry, the run.py script do the job for you.
 
-Explain what these tests test and why
+The _private_ip_ and _hostname_ are important to configure ssh keys on remote.
+They can also be used as _hostfile_ with mpirun.
 
+On remote:
+
+```bash
+mv private_ip hostfile
+mpirun -n 4 -f hostfile ./foo
 ```
-Give an example
-```
+
+The _public_ip_ will be used to configure the ssh keys, but it is not an essencial file.
+After you stop and start a VM, the value of public IP will change.
+
+I strongly recommend to use the private IP when running mpi applicatins.
 
 ## Deployment
 
@@ -65,30 +78,4 @@ Add additional notes about how to deploy this on a live system
 
 ## Built With
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags).
-
-## Authors
-
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* [Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) - Boto is the Amazon Web Services (AWS) SDK for Python

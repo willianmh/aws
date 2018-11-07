@@ -1,71 +1,54 @@
-# HPC - Hayashida's Power Cloud
+Requisitos:
 
-A fantastic tool to setup and automate test on AWS cloud enviroment using python.
+linux:
+  awscli
 
-## Getting Started
+python:
+  boto3
+  paramiko
+  configparser
 
-You need an AWS account and python installed
 
-### Prerequisites
+sudo apt-get install awscli
+aws configure
 
-You need boto3, paramiko and configparser packages installed on your machine
+Sera preciso um arquivo de configuração. Tem um exemplo no diretorio 'config'
+Execute do diretorio raiz:
 
-```bash
-pip install boto3 paramiko configparser
-```
+python3 run.py 'instances/c5.xlarge.json' 'config/instances_cfg.ini' 'mykey.pem'
 
-There is a folder _instances_ with some templates that will be used to define the instances.
 
-## Running the tests
+# ------------------
+serão criados 5 arquivos:
+  hostname
+  private_ip
+  public_ip
+  hosts
+  instances_ids
 
-You must
+os tres primeiros serao usados para configurar as chaves SSH.
+hosts é um alias pra evitar erro em que o mpi não encontra os nós.
+Precisa ser copiado para /etc/hosts. Note que em run.py já é feito isso.
+O ultimo contem os ids das VMS caso se precise posteriormente
 
-### Break down into end to end tests
+Os 4 primeiros arquivos serão copiados para todas as VMs em run.py.
 
-Explain what these tests test and why
+# -----------------
 
-```
-Give an example
-```
+Uma vez executado o comando acima, basta se conectar a alguma maquina com o comando
 
-### And coding style tests
+ssh -i "path_to_pem_key" ubuntu@$(cat public_ip | tail -n 1)
 
-Explain what these tests test and why
+# -----------------
 
-```
-Give an example
-```
+Para desligar as maquinas execute o comando
 
-## Deployment
+python3 terminate.py 'path_to_ids'
 
-Add additional notes about how to deploy this on a live system
+Ou por default, o script irá procurar por instances_ids
 
-## Built With
+# -----------------
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags).
-
-## Authors
-
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+IMPORTANTE:
+  Caso queira simular a execução, descomente o código em run.py.
+  Note que executará o FWI de acordo com as configurações setadas e com n_iter vezes para se tirar a média.

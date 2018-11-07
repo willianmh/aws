@@ -6,6 +6,8 @@ A fantastic tool to setup and automate test on AWS cloud enviroment using python
 
 First, you need an AWS account. These scripts were made with python and bash.
 
+You just need to code run.py.
+
 ### Prerequisites
 
 To use boto3, you need awscli. Install it, and configure with you secret access key and ID.
@@ -15,14 +17,14 @@ sudo apt-get install awscli
 aws configure
 ```
 
-You need boto3, paramiko and configparser packages installed on your machine
+Install boto3, paramiko and configparser
 
 ```bash
 pip install boto3 paramiko configparser
 ```
 ### Important
 
-The main function will need two file, a configure file and a instance template file.
+The main function requires two file, a configure file and a instance template file.
 In this repository the files are on _instances_ and _config_ folder.
 The configure file has priority, so it will overwrite the definitions on template file.
 
@@ -46,13 +48,14 @@ You just need to adapt run.py to your application.
 
 ### Understanding
 
-Once you've executed run.py, it will create 4 files.
+Once you've executed run.py, it will create 5 files.
 
 ```
 public_ip
 private_ip
 hostname
 hosts
+instances_ids
 ```
 
 They are all copied to remote on run.py.
@@ -70,6 +73,8 @@ mv private_ip hostfile
 mpirun -n 4 -f hostfile ./foo
 ```
 
+The _instances_ids_ contains the instances ids to posterior use (like on terminate instances).
+
 The _public_ip_ will be used to configure the ssh keys, but it is not an essencial file.
 After you stop and start a VM, the value of public IP will change.
 
@@ -85,20 +90,44 @@ You can edit it to do more stuff for you.
 import src.awsFunctions as aws
 ```
 
-### transfering files to remote
+### Transfering files to remote
 
+#### Upload
 You need to define a list with the paths to the files and the IDs of the instances.
 
 ```python
 username = "ubuntu" # AWS use it by default on ubuntu VMs
 files = ['file_1', '../file_2', 'file_3']
-aws.uploadFiles(ids, path_to_key, files, username)
+aws.uploadFiles(ids, path_to_key, files, username, n_attempts)
 ```
 
 It works like a broadcast.
 Copy the same files to all remotes on "~/".
 
+Sometimes, AWS say that our instances are running but the ssh service is not already available, so we can define a n_attempts to try many times.
 
+#### Download
+
+To simplicity, you can download one file per VM on each function call.
+
+```python
+remote_path = '/home/ubuntu/file.out'
+local_path = result_dir + '/file.out'
+aws.downloadFile(id, path_to_key, remote_path, local_path, username)
+
+```
+
+### Executing commands on remote
+
+Just like transfering files, you create a list with commands.
+Note: you can execute commands w/ _sudo_.
+
+```python
+commands = ['echo 0 | sudo tee cat /proc/sys/kernel/yama/ptrace_scope', 'sudo mv ~/hosts /etc/hosts']
+aws.executeCommands(ids, path_to_key, commands)
+```
+
+Again, it will execute the same commands to all machines.
 
 ### Connecting to remote
 
@@ -110,9 +139,21 @@ ssh -i "path_to_pem_key" ubuntu@$(cat public_ip | tail -n 1)
 
 Be carefull that it will not work if you stop the instance and start again.
 
-## Deployment
+### Terminating instances
 
-Add additional notes about how to deploy this on a live system
+Execute
+
+```
+python3 terminate.py 'path_to_ids'
+```
+
+Example:
+
+```
+python3 terminate.py 'instances_ids'
+```
+
+Note: if you not define a file, it will search for the file instances_ids.
 
 ## Built With
 

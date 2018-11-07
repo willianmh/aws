@@ -1,10 +1,11 @@
 import boto3
-import os
 import configparser
+import json
+import os
 import paramiko
 import time
 import datetime
-# import json
+from pathlib import Path
 
 
 class Logger:
@@ -18,10 +19,215 @@ class Logger:
         if self.debug:
             self.write(s)
 
-basedir = os.getcwd().split('aws',1)[0] + 'aws
-debug = False
+basedir = os.getcwd().split('aws',1)[0] + 'aws'
 
+debug = False
 log = Logger()
+log.debug = debug
+
+# *********************************************************
+# Broadcast
+# *********************************************************
+#
+# upload files to all VMs
+#
+
+
+def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu', n_attempts=5):
+    ec2 = boto3.resource('ec2')
+    public_ips = []
+
+    for id in instancesids:
+        instance = ec2.Instance(id)
+        public_ips.append(instance.public_ip_address)
+
+    ssh_client = paramiko.SSHClient()
+    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    log.write('uploanding files')
+    # k = paramiko.RSAKey.from_private_key_file(path_to_key)
+    for ip in public_ips:
+        for attempts in range(n_attempts):
+            try:
+                ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
+                ftp_client = ssh_client.open_sftp()
+                for path_to_file in paths_to_files:
+                    file = os.path.basename(path_to_file)
+                    ftp_client.put(path_to_file, '/home/ubuntu/'+file)
+                ftp_client.close()
+                ssh_client.close()
+                log.write('upload success on %s!' % str(ip))
+                break
+            except Exception as e:
+                log.write(e)
+                log.write('trying again')
+                time.sleep(1)
+                continue
+
+# *********************************************************
+# Download Files to local
+# *********************************************************
+#
+# Download a single file
+#
+
+
+def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubuntu'):
+    ec2 = boto3.resource('ec2')
+    instance = ec2.Instance(instanceid)
+
+    ip = instance.public_ip_address
+
+    ssh_client = paramiko.SSHClient()
+    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
+    log.write('downloading files')
+    ftp_client = ssh_client.open_sftp()
+    ftp_client.get(remote_path, local_path)
+    ftp_client.close()
+    ssh_client.close()
+
+# *********************************************************
+# Execute a list of commands to all VMS
+# *********************************************************
+#
+# Execute the same commands to each VM
+#
+
+
+def executeCommands(instancesids, path_to_key, commands, username='ubuntu'):
+    ec2 = boto3.resource('ec2')
+    public_ips = []
+    output = []
+    output_err = []
+    for id in instancesids:
+        instance = ec2.Instance(id)
+        public_ips.append(instance.public_ip_address)
+
+    ssh_client = paramiko.SSHClient()
+    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    log.write('executing commands')
+    # k = paramiko.RSAKey.from_private_key_file(path_to_key)
+    for ip in public_ips:
+        ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
+        for command in commands:
+            log.write('executing commmand: %s' % command)
+            stdin, stdout, stderr = ssh_client.exec_command(command)
+            output.append(stdout.readlines())
+            output_err.append(stderr.readlines())
+    ssh_client.close()
+
+    return output, output_err
+
+# *********************************************************
+# Launch instances
+# *********************************************************
+#
+# Launch instances based on a template file
+#
+
+
+def launch_instances(path_to_instance, path_to_file):
+    """
+    path_to_instance: path for template file
+    path_to_file: path for configure file
+
+    it will return instances objects and ids
+    intances: list of objects
+    ids: list of strings
+    """
+
+    user_data = """#!/bin/bash
+"""
+    cfg = configparser.ConfigParser()
+    cfg.read(path_to_file)
+
+    # Initialize the ec2 object
+    ec2 = boto3.resource('ec2', region_name='us-east-1')
+    client = boto3.client('ec2')
+    machine_definitions = json.load(open(path_to_instance, 'r'))
+
+    if cfg['placement']['enable'] == 'True' and cfg['tenancy']['enable'] == 'True':
+        log.write('Error in definitions. You must select between placement and tenancy')
+        exit()
+
+    # Launch Instances on Placement
+    if cfg['placement']['enable'] == 'True':
+        # Check if placement already exists
+        placement_groups = list(ec2.placement_groups.all())
+        not_exist = True
+        if len(placement_groups):
+            for placement_group in placement_groups:
+                if placement_group.group_name == cfg['placement']['name']:
+                    not_exist = False
+
+        if not_exist:
+            log.write('creating placement_group: %s' % cfg['placement']['name'])
+            response = client.create_placement_group(
+                GroupName=cfg['placement']['name'],
+                Strategy=cfg['placement']['strategy']
+            )
+        machine_definitions['Placement']['GroupName'] = cfg['placement']['name']
+    # Launch Instances on Specific Tenancy
+    if cfg['tenancy']['enable'] == 'True':
+        machine_definitions['Placement']['Tenancy'] = cfg['tenancy']['type']
+        if cfg['placement']['type'] == 'host':
+            machine_definitions['Placement']['HostId'] = cfg['placement']['hostdID']
+            machine_definitions['Placement']['Affinity'] = 'host'
+
+    # Overwrite definitions with configure file
+    machine_definitions['UserData'] = user_data
+    machine_definitions['ImageId'] = cfg['instance']['CustomAMI']
+    machine_definitions['SubnetId'] = cfg['instance']['SubnetID']
+    machine_definitions['SecurityGroupIds'][0] = cfg['instance']['SecurityGroupID']
+    machine_definitions['MaxCount'] = int(cfg['instance']['MaxCount'])
+    machine_definitions['MinCount'] = int(cfg['instance']['MinCount'])
+
+    log.write('starting %d %s' % (int(cfg['instance']['MaxCount']), path_to_instance))
+    instances = ec2.create_instances(**machine_definitions)
+
+    # get all IDs
+    ids = []
+    for i in range(len(instances)):
+        ids.append(instances[i].id)
+    # waiter for status running on each instances
+    waiter = client.get_waiter('instance_running')
+    waiter.wait(
+        InstanceIds=ids
+    )
+    # write ids on file
+    myfile = Path('instances_ids')
+    if myfile.is_file():
+        os.remove('hostname')
+    with open('instances_ids', 'a') as id_file:
+        for id in ids:
+            id_file.write(str(id) + '\n')
+
+    log.write('instances launched!')
+    return instances, ids
+
+# *********************************************************
+# Terminate all VMS
+# *********************************************************
+
+
+def terminate_instances(ids):
+    client = boto3.client('ec2')
+    log.write('terminating instances')
+    response = client.terminate_instances(
+        InstanceIds=ids
+    )
+    waiter = client.get_waiter('instance_terminated')
+    waiter.wait(
+        InstanceIds=ids
+    )
+    log.write('instances terminated')
+
+# *****************************************************************************************
+#
+# CLOUDFORMATION FUNCTIONS
+#
+# *****************************************************************************************
+
 
 def validateTemplate(TemplateBody):
     client = boto3.client('cloudformation')
@@ -171,81 +377,6 @@ def createCloudEnviroment(configFile):
 
             return cloudformation.Stack(config['cloudformation']['StackName']).outputs, stack
 
-
-def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu'):
-    ec2 = boto3.resource('ec2')
-    public_ips = []
-
-    for id in instancesids:
-        instance = ec2.Instance(id)
-        public_ips.append(instance.public_ip_address)
-
-    ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    print('uploanding files')
-    # k = paramiko.RSAKey.from_private_key_file(path_to_key)
-    for ip in public_ips:
-        n_attempts = 5
-        for attempts in range(n_attempts):
-            try:
-                ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
-                ftp_client = ssh_client.open_sftp()
-                for path_to_file in paths_to_files:
-                    file = os.path.basename(path_to_file)
-                    ftp_client.put(path_to_file, '/home/ubuntu/'+file)
-                ftp_client.close()
-                ssh_client.close()
-                print('upload success on %s!' % str(ip))
-                break
-            except Exception as e:
-                print(e)
-                print('trying again')
-                time.sleep(1)
-                continue
-
-
-def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubuntu'):
-    ec2 = boto3.resource('ec2')
-    instance = ec2.Instance(instanceid)
-
-    ip = instance.public_ip_address
-
-    ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
-    print('downloading files')
-    ftp_client = ssh_client.open_sftp()
-    ftp_client.get(remote_path, local_path)
-    ftp_client.close()
-    ssh_client.close()
-
-
-def executeCommands(instancesids, path_to_key, commands, username='ubuntu'):
-    ec2 = boto3.resource('ec2')
-    public_ips = []
-    output = []
-    output_err = []
-    for id in instancesids:
-        instance = ec2.Instance(id)
-        public_ips.append(instance.public_ip_address)
-
-    ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    print('executing commands')
-    # k = paramiko.RSAKey.from_private_key_file(path_to_key)
-    for ip in public_ips:
-        ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
-        for command in commands:
-            print('executing commmand: %s' % command)
-            stdin, stdout, stderr = ssh_client.exec_command(command)
-            output.append(stdout.readlines())
-            output_err.append(stderr.readlines())
-    ssh_client.close()
-
-    return output, output_err
-
-
-
 # *********************************************************
 # List EC2 instances
 # *********************************************************
@@ -324,7 +455,7 @@ def startInstance(instance_id):
         waiter.wait(
             InstanceIds=[instance.id]
         )
-        print("intances are running")
+        log.write("intances are running")
     return instance
 
 # Stop Instance
@@ -342,7 +473,7 @@ def stopInstance(instance_id):
         waiter.wait(
             InstanceIds=[instance.id]
         )
-        print("intances are stopped")
+        log.write("intances are stopped")
         return True
     return False
 
@@ -395,27 +526,23 @@ def dettachVolume(instance_id, volume_id):
 
 def startVisualization(instance_id, volume_id, pem_key):
     instance = startInstance(instance_id)
-    print(instance)
+    log.write(instance)
     if instance:
         if attachVolume(instance_id, volume_id):
             os.system('ssh -i "%s" ubuntu@%s mkdir /home/ubuntu/shared' % (pem_key, instance.public_ip_address))
             os.system('ssh -i "%s" ubuntu@%s sudo mount /dev/nvme1n1 /home/ubuntu/shared' % (pem_key, instance.public_ip_address))
 
-            print("Instance %s is running and mounted to volume %s." % (instance_id, volume_id))
-            print("Connect to instance with the following IP:")
-            print("%s" % instance.public_ip_address)
+            log.write("Instance %s is running and mounted to volume %s." % (instance_id, volume_id))
+            log.write("Connect to instance with the following IP:")
+            log.write("%s" % instance.public_ip_address)
         else:
-            print("Volume is already attached to some instance")
+            log.write("Volume is already attached to some instance")
 
 
 def stopVisualization(instance_id, volume_id):
     if dettachVolume(instance_id=instance_id, volume_id=volume_id):
-        print("Volume dettached")
+        log.write("Volume dettached")
         if stopInstance(instance_id=instance_id):
-            print("Instance stopped")
+            log.write("Instance stopped")
             return True
     return False
-
-# *********************************************************
-# Prepare enviroment
-# *********************************************************

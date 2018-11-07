@@ -20,7 +20,7 @@ You need boto3, paramiko and configparser packages installed on your machine
 ```bash
 pip install boto3 paramiko configparser
 ```
-### important
+### Important
 
 The main function will need two file, a configure file and a instance template file.
 In this repository the files are on _instances_ and _config_ folder.
@@ -42,6 +42,8 @@ Example:
 python3 run.py 'instances/c5.xlarge.json' 'config/instances_cfg.ini' 'mykey.pem'
 ```
 
+You just need to adapt run.py to your application.
+
 ### Understanding
 
 Once you've executed run.py, it will create 4 files.
@@ -53,9 +55,10 @@ hostname
 hosts
 ```
 
+They are all copied to remote on run.py.
+
 The _hosts_ file is important to run mpi application, it must be moved to /etc/hosts.
-The script will edit _hosts.old_ and add the necessary lines.
-Don't worry, the run.py script do the job for you.
+The run.py edit _hosts.old_ and add the necessary lines.
 
 The _private_ip_ and _hostname_ are important to configure ssh keys on remote.
 They can also be used as _hostfile_ with mpirun.
@@ -71,6 +74,21 @@ The _public_ip_ will be used to configure the ssh keys, but it is not an essenci
 After you stop and start a VM, the value of public IP will change.
 
 I strongly recommend to use the private IP when running mpi applicatins.
+
+### Firstscript
+
+The firstscript.sh is responsable to configure SSH KEYS, and it will use _private_ip_, _public_ip_ and _hostname_.
+You can edit it to do more stuff for you.
+
+### Connecting to remote
+
+With the _public_ip_ file, you can execute:
+
+```
+ssh -i "path_to_pem_key" ubuntu@$(cat public_ip | tail -n 1)
+```
+
+Be carefull that it will not work if you stop the instance and start again.
 
 ## Deployment
 

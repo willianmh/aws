@@ -79,12 +79,32 @@ I strongly recommend to use the private IP when running mpi applicatins.
 
 The firstscript.sh is responsable to configure SSH KEYS, and it will use _private_ip_, _public_ip_ and _hostname_.
 You can edit it to do more stuff for you.
+## Using AWS Functions
+
+```python
+import src.awsFunctions as aws
+```
+
+### transfering files to remote
+
+You need to define a list with the paths to the files and the IDs of the instances.
+
+```python
+username = "ubuntu" # AWS use it by default on ubuntu VMs
+files = ['file_1', '../file_2', 'file_3']
+aws.uploadFiles(ids, path_to_key, files, username)
+```
+
+It works like a broadcast.
+Copy the same files to all remotes on "~/".
+
+
 
 ### Connecting to remote
 
 With the _public_ip_ file, you can execute:
 
-```
+```bash
 ssh -i "path_to_pem_key" ubuntu@$(cat public_ip | tail -n 1)
 ```
 

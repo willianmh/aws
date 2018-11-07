@@ -197,8 +197,8 @@ def launch_instances(path_to_instance, path_to_file):
     # write ids on file
     myfile = Path('instances_ids')
     if myfile.is_file():
-        os.remove('hostname')
-    with open('instances_ids', 'a') as id_file:
+        os.remove('instances_ids')
+    with open('instances_ids', 'w') as id_file:
         for id in ids:
             id_file.write(str(id) + '\n')
 

@@ -93,7 +93,7 @@ def main():
     commands = ['chmod +x run_fwi.sh', 'chmod +x firstscript.sh', 'chmod +x ping.sh', 'chmod +x copy_all.sh', 'chmod +x disable_hyperthreading.sh']
     aws.executeCommands(ids, path_to_key, commands)
 
-    commands = ['sudo ./firstscript', './ping.sh']
+    commands = ['./firstscript', './ping.sh']
     aws.executeCommands(ids, path_to_key, commands)
     # n_iterations = 1
     # print('running fwi with %d processes' % total_cores)

@@ -47,9 +47,12 @@ set_nfs() {
   sudo service nfs-kernel-server restart
   sudo exportfs -a
 
+  echo $(hostname) > master
+  ./copy_all.sh master
+
   for host in $(cat hostname)
   do
-    if [ ! "$(hostname)" == "$host"];then
+    if [ ! "$(hostname)" == "$host" ];then
       ssh $host mkdir -p ~/shared
       ssh $host 'sudo mount -t nfs $(cat ~/master):/home/ubuntu/shared ~/shared'
       ssh $host 'echo $(cat ~/master):/home/ubuntu/shared /home/ubuntu/shared nfs" | sudo tee -a /etc/fstab'

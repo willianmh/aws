@@ -41,4 +41,39 @@ setup_ssh_keys() {
   done
 }
 
+create_nfs() {
+  mkdir -p shared
+  echo "/home/ubuntu/shared *(rw,sync,no_root_squash,no_subtree_check)" | tee -a /etc/exports
+  service nfs-kernel-server restart
+  exportfs -a
+}
+
+is_file() {
+    local file=$1
+
+    [[ -f $file ]]
+}
+
+set_nfs() {
+  if [ "$(hostname)" == "${i}"]
+  then
+    create_nfs
+    echo $hostname > master
+    ~/copy_all.sh master
+  else
+    sleep 5
+    mkdir -p ~/shared
+    while true
+    do
+      is_file ~/master \
+        && break
+    done
+    mount -t nfs $(cat ~/master):/home/ubuntu/shared ~/shared
+
+    echo "$(cat ~/master):/home/ubuntu/shared /home/ubuntu/shared nfs" | tee -a /etc/fstab
+
+  fi
+}
+
 setup_ssh_keys
+set_nfs

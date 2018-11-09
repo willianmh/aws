@@ -31,6 +31,10 @@
       {"ResourceType": "instance",
       "Tags":[
           {
+            "Key": "Name",
+            "Value": "Will-fwi"
+          },
+          {
             "Key": "owner",
             "Value": "will"
           },

@@ -31,7 +31,7 @@ do
 
   cd ~/
   head -n ${machines} instances_ids > instances_to_start
-  python3 aws/start.py ~/instances_to_start
+  python3 aws/start.py instances_to_start
 
   echo "copying run_marmousi to others workers"
   for i in $(cat hostname | head -n ${machines});do
@@ -57,6 +57,7 @@ do
   echo "Runnign toy2dac"
   for ppn in 1 2 4 8
   do
+    echo "ppn ${ppn}"
     total_processes=$((${machines}*${ppn}))
     omp=$((8/$ppn))
     result_dir=/home/ubuntu/results/toy2dac/

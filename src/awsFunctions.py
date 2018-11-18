@@ -315,7 +315,7 @@ def terminate_instances(ids, n_attempts=2):
     return status
 
 
-
+# af
 # *****************************************************************************************
 #
 # CLOUDFORMATION FUNCTIONS

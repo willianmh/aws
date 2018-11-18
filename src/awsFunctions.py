@@ -6,6 +6,9 @@ import paramiko
 import time
 from pathlib import Path
 
+import math
+import threading
+
 
 # class Logger:
 #     def __init__(self):
@@ -71,6 +74,27 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu', n_
         if not transfer_status[id]:
             print('could not transfer files to instance %s' % id)
     return transfer_status
+
+
+def transfer_parallel(instancesids, path_to_key, paths_to_files, username='ubuntu', n_attempts=5):
+    if len(instancesids) >= 4:
+        y = math.ceil(19/4)
+        t1 = threading.Thread(target=uploadFiles, args=(instancesids[:y], path_to_key, paths_to_files, username, n_attempts,))
+        t2 = threading.Thread(target=uploadFiles, args=(instancesids[y:2*y], path_to_key, paths_to_files, username, n_attempts,))
+        t3 = threading.Thread(target=uploadFiles, args=(instancesids[2*y:3*y], path_to_key, paths_to_files, username, n_attempts,))
+        t4 = threading.Thread(target=uploadFiles, args=(instancesids[3*y:instancesids], path_to_key, paths_to_files, username, n_attempts,))
+
+        t1.start()
+        t2.start()
+        t3.start()
+        t4.start()
+
+        t1.join()
+        t2.join()
+        t3.join()
+        t4.join()
+    else:
+        uploadFiles(instancesids, path_to_key, paths_to_files, username, n_attempts)
 # *********************************************************
 # Download Files to local
 # *********************************************************

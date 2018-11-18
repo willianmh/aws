@@ -8,7 +8,7 @@
             "DeviceName": "/dev/sda1",
             "VirtualName": "eth0",
             "Ebs": {
-                "VolumeSize": 100,
+                "VolumeSize": 200,
                 "DeleteOnTermination": true,
                 "VolumeType": "gp2"
             },

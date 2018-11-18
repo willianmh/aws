@@ -81,13 +81,30 @@ def main():
     config_host_alias(ids)
 
     # necessary files to run mpi applications
-    files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh', 'run_all.sh', 'ping.sh', 'copy_all.sh', 'disable_hyperthreading.sh']
+    files = [
+        'hosts',
+        'hostname',
+        'public_ip',
+        'private_ip',
+        'instances_ids',
+        'firstscript.sh',
+        'ping.sh',
+        'copy_all.sh',
+        'disable_hyperthreading.sh',
+        'run_all.sh',
+        ]
     aws.uploadFiles(ids, path_to_key, files, 'ubuntu')
 
     # necessary commands to to run mpi applications
-    commands = ['echo 0 | sudo tee cat /proc/sys/kernel/yama/ptrace_scope', 'sudo mv ~/hosts /etc/hosts']
-    aws.executeCommands(ids, path_to_key, commands)
-    commands = ['chmod +x run_fwi.sh', 'chmod +x firstscript.sh', 'chmod +x ping.sh', 'chmod +x copy_all.sh', 'chmod +x disable_hyperthreading.sh', './ping.sh']
+    commands = [
+        'echo 0 | sudo tee cat /proc/sys/kernel/yama/ptrace_scope',
+        'sudo mv ~/hosts /etc/hosts',
+        'chmod +x firstscript.sh',
+        'chmod +x ping.sh',
+        'chmod +x copy_all.sh',
+        'chmod +x disable_hyperthreading.sh',
+        'chmod +x run_all.sh',
+        ]
     aws.executeCommands(ids, path_to_key, commands)
 
     commands = ['./firstscript.sh']

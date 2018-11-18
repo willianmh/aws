@@ -78,11 +78,11 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu', n_
 
 def transfer_parallel(instancesids, path_to_key, paths_to_files, username='ubuntu', n_attempts=5):
     if len(instancesids) >= 4:
-        y = math.ceil(19/4)
+        y = math.ceil(len(instancesids)/4)
         t1 = threading.Thread(target=uploadFiles, args=(instancesids[:y], path_to_key, paths_to_files, username, n_attempts,))
         t2 = threading.Thread(target=uploadFiles, args=(instancesids[y:2*y], path_to_key, paths_to_files, username, n_attempts,))
         t3 = threading.Thread(target=uploadFiles, args=(instancesids[2*y:3*y], path_to_key, paths_to_files, username, n_attempts,))
-        t4 = threading.Thread(target=uploadFiles, args=(instancesids[3*y:instancesids], path_to_key, paths_to_files, username, n_attempts,))
+        t4 = threading.Thread(target=uploadFiles, args=(instancesids[3*y:len(instancesids)], path_to_key, paths_to_files, username, n_attempts,))
 
         t1.start()
         t2.start()

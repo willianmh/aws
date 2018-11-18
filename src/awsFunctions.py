@@ -35,7 +35,7 @@ basedir = os.getcwd().split('aws',1)[0] + 'aws'
 #
 
 
-def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu', n_attempts=5):
+def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu', n_attempts=7):
     ec2 = boto3.resource('ec2')
 
     ssh_client = paramiko.SSHClient()
@@ -76,7 +76,7 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu', n_
     return transfer_status
 
 
-def transfer_parallel(instancesids, path_to_key, paths_to_files, username='ubuntu', n_attempts=5):
+def transferParallel(instancesids, path_to_key, paths_to_files, username='ubuntu', n_attempts=7):
     if len(instancesids) >= 4:
         y = math.ceil(len(instancesids)/4)
         t1 = threading.Thread(target=uploadFiles, args=(instancesids[:y], path_to_key, paths_to_files, username, n_attempts,))
@@ -103,7 +103,7 @@ def transfer_parallel(instancesids, path_to_key, paths_to_files, username='ubunt
 #
 
 
-def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubuntu', n_attempts=5):
+def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubuntu', n_attempts=7):
     ec2 = boto3.resource('ec2')
     instance = ec2.Instance(instanceid)
     ssh_client = paramiko.SSHClient()
@@ -125,7 +125,7 @@ def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubu
         except Exception as e:
             print(e)
             print('trying again')
-            time.sleep(2)
+            time.sleep(1)
             continue
     return done
 # *********************************************************
@@ -136,7 +136,7 @@ def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubu
 #
 
 
-def executeCommands(instancesids, path_to_key, commands, username='ubuntu', n_attempts=5):
+def executeCommands(instancesids, path_to_key, commands, username='ubuntu', n_attempts=7):
     ec2 = boto3.resource('ec2')
     # if you need to wait your command, you must read its output, otherwise it will return and your command may not be executed
     output = []
@@ -165,11 +165,32 @@ def executeCommands(instancesids, path_to_key, commands, username='ubuntu', n_at
             except Exception as e:
                 print(e)
                 print('trying again')
-                time.sleep(2)
+                time.sleep(1)
                 continue
             if not execute_status[id]:
                 print('could not execute files to instance %s' % id)
     return execute_status, output, output_err
+
+
+def executeParallel(instancesids, path_to_key, commands, username='ubuntu', n_attempts=7):
+    if len(instancesids) >= 4:
+        y = math.ceil(len(instancesids)/4)
+        t1 = threading.Thread(target=executeCommands, args=(instancesids[:y], path_to_key, commands, username, n_attempts,))
+        t2 = threading.Thread(target=executeCommands, args=(instancesids[y:2*y], path_to_key, commands, username, n_attempts,))
+        t3 = threading.Thread(target=executeCommands, args=(instancesids[2*y:3*y], path_to_key, commands, username, n_attempts,))
+        t4 = threading.Thread(target=executeCommands, args=(instancesids[3*y:len(instancesids)], path_to_key, commands, username, n_attempts,))
+
+        t1.start()
+        t2.start()
+        t3.start()
+        t4.start()
+
+        t1.join()
+        t2.join()
+        t3.join()
+        t4.join()
+    else:
+        executeCommands(instancesids, path_to_key, commands, username, n_attempts)
 
 # *********************************************************
 # Launch instances

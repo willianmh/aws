@@ -16,7 +16,7 @@ def main():
             ids.append(line.rstrip())
 
     aws.terminate_instances(ids)
-    time.sleep(10)
+    time.sleep(1)
 
 
 main()

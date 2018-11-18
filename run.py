@@ -67,7 +67,7 @@ def main():
     # path_to_instance = 'instances/c5.xlarge.json'
     print('starting program')
     instances, ids = aws.launch_instances(path_to_instance, path_to_configure)
-    time.sleep(10)
+    time.sleep(2)
 
     cores = instances[0].cpu_options['CoreCount'] * instances[0].cpu_options['ThreadsPerCore']
     total_cores = len(ids) * cores
@@ -94,7 +94,7 @@ def main():
         'run_all.sh',
         ]
     # aws.uploadFiles(ids, path_to_key, files, 'ubuntu')
-    aws.transfer_parallel(ids, path_to_key, files)
+    aws.transferParallel(ids, path_to_key, files)
     # necessary commands to to run mpi applications
     commands = [
         'echo 0 | sudo tee cat /proc/sys/kernel/yama/ptrace_scope',
@@ -105,7 +105,8 @@ def main():
         'chmod +x disable_hyperthreading.sh',
         'chmod +x run_all.sh',
         ]
-    aws.executeCommands(ids, path_to_key, commands)
+    # aws.executeCommands(ids, path_to_key, commands)
+    aws.executeParallel(ids, path_to_key, commands)
 
     commands = ['./firstscript.sh']
     aws.executeCommands(ids[:1], path_to_key, commands)

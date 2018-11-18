@@ -13,6 +13,7 @@ cp private_ip run_marmousi_template
 
 echo "modeling"
 cd run_marmousi_template/
+sed -i '1s/^/0\n/' mumps_input
 sed -i 's/vp_Marmousi_init qp rho epsilon_m delta_m theta_m/vp_Marmousi_exact qp rho/' fdfd_input
 sed -i 's/0           ! Hicks interpolation (1 YES, 0 NO)/1           ! Hicks interpolation (1 YES, 0 NO)/' fdfd_input
 sed -i 's/1            ! mode of the code (0 = MODELING, 1 = INVERSION)/0            ! mode of the code (0 = MODELING, 1 = INVERSION)/' toy2dac_input
@@ -50,7 +51,7 @@ do
       scp -r fwi_src ${i}:
     fi
   done
-  
+
   cd run_marmousi_template/
 
   echo "Runnign toy2dac"
@@ -68,7 +69,7 @@ do
     -ppn ${ppn} \
     -genv OMP_NUM_THREADS=${omp} \
     -genv I_MPI_PIN_DOMAIN=omp \
-    -f ~hostfile ~/toy2dac/bin/toy2dac >> ${result_dir}/inversion_${machines}_${ppn}.out
+    -f hostfile ~/toy2dac/bin/toy2dac >> ${result_dir}/inversion_${machines}_${ppn}.out
 
     sleep 1
   done

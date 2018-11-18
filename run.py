@@ -81,7 +81,7 @@ def main():
     config_host_alias(ids)
 
     # necessary files to run mpi applications
-    files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh', 'run_fwi.sh', 'ping.sh', 'copy_all.sh', 'disable_hyperthreading.sh']
+    files = ['hosts', 'hostname', 'public_ip', 'private_ip', 'firstscript.sh', 'run_all.sh', 'ping.sh', 'copy_all.sh', 'disable_hyperthreading.sh']
     aws.uploadFiles(ids, path_to_key, files, 'ubuntu')
 
     # necessary commands to to run mpi applications

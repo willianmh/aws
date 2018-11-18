@@ -4,7 +4,6 @@ import json
 import os
 import paramiko
 import time
-import datetime
 from pathlib import Path
 
 
@@ -35,24 +34,31 @@ basedir = os.getcwd().split('aws',1)[0] + 'aws'
 
 def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu', n_attempts=5):
     ec2 = boto3.resource('ec2')
-    public_ips = []
-
-    for id in instancesids:
-        instance = ec2.Instance(id)
-        public_ips.append(instance.public_ip_address)
 
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     print('uploanding files')
     # k = paramiko.RSAKey.from_private_key_file(path_to_key)
-    for ip in public_ips:
+
+    transfer_status = {}
+    # iterate over each instance
+    for id in instancesids:
+
+        # get IP
+        ip = ec2.Instance(id).public_ip_address
+
+        transfer_status[id] = False
+        # Try to upload
         for attempts in range(n_attempts):
             try:
+                transfer_status[id] = True  # update status for specific instance
+
+                # paramiko stuff
                 ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
                 ftp_client = ssh_client.open_sftp()
                 for path_to_file in paths_to_files:
                     file = os.path.basename(path_to_file)
-                    ftp_client.put(path_to_file, '/home/ubuntu/'+file)
+                    ftp_client.put(path_to_file, '/home/ubuntu/'+file)  # copies on home !!!! ****************
                 ftp_client.close()
                 ssh_client.close()
                 print('upload success on %s!' % str(ip))
@@ -60,9 +66,11 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu', n_
             except Exception as e:
                 print(e)
                 print('trying again')
-                time.sleep(1)
+                time.sleep(2)
                 continue
-
+        if not transfer_status[id]:
+            print('could not transfer files to instance %s' % id)
+    return transfer_status
 # *********************************************************
 # Download Files to local
 # *********************************************************
@@ -71,21 +79,31 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu', n_
 #
 
 
-def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubuntu'):
+def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubuntu', n_attempts=5):
     ec2 = boto3.resource('ec2')
     instance = ec2.Instance(instanceid)
+    ssh_client = paramiko.SSHClient()
+    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     ip = instance.public_ip_address
 
-    ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
-    print('downloading files')
-    ftp_client = ssh_client.open_sftp()
-    ftp_client.get(remote_path, local_path)
-    ftp_client.close()
-    ssh_client.close()
-
+    done = False
+    for attempts in range(n_attempts):
+        try:
+            done = True
+            ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
+            print('downloading files')
+            ftp_client = ssh_client.open_sftp()
+            ftp_client.get(remote_path, local_path)
+            ftp_client.close()
+            ssh_client.close()
+            break
+        except Exception as e:
+            print(e)
+            print('trying again')
+            time.sleep(2)
+            continue
+    return done
 # *********************************************************
 # Execute a list of commands to all VMS
 # *********************************************************
@@ -94,29 +112,40 @@ def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubu
 #
 
 
-def executeCommands(instancesids, path_to_key, commands, username='ubuntu'):
+def executeCommands(instancesids, path_to_key, commands, username='ubuntu', n_attempts=5):
     ec2 = boto3.resource('ec2')
-    public_ips = []
+    # if you need to wait your command, you must read its output, otherwise it will return and your command may not be executed
     output = []
     output_err = []
-    for id in instancesids:
-        instance = ec2.Instance(id)
-        public_ips.append(instance.public_ip_address)
 
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     print('executing commands')
     # k = paramiko.RSAKey.from_private_key_file(path_to_key)
-    for ip in public_ips:
-        ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
-        for command in commands:
-            print('executing commmand: %s' % command)
-            stdin, stdout, stderr = ssh_client.exec_command(command)
-            output.append(stdout.readlines())
-            output_err.append(stderr.readlines())
-    ssh_client.close()
 
-    return output, output_err
+    execute_status = {}
+    for id in instancesids:
+        ip = ec2.Instance(id).public_ip_address
+        execute_status[id] = False
+        for attempts in range(n_attempts):
+            try:
+                execute_status[id] = True
+                ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
+                for command in commands:
+                    print('executing commmand: %s' % command)
+                    stdin, stdout, stderr = ssh_client.exec_command(command)
+                    output.append(stdout.readlines())
+                    output_err.append(stderr.readlines())
+                ssh_client.close()
+                break
+            except Exception as e:
+                print(e)
+                print('trying again')
+                time.sleep(2)
+                continue
+            if not execute_status[id]:
+                print('could not execute files to instance %s' % id)
+    return execute_status, output, output_err
 
 # *********************************************************
 # Launch instances
@@ -206,21 +235,86 @@ def launch_instances(path_to_instance, path_to_file):
     return instances, ids
 
 # *********************************************************
-# Terminate all VMS
+# Start all VMS
 # *********************************************************
 
 
-def terminate_instances(ids):
+def start_instances(ids, n_attempts=2):
+    client = boto3.client('ec2')
+    print('starting instances')
+    status = False
+    for attempts in range(n_attempts):
+        try:
+            status = True
+            response = client.start_instances(
+                InstanceIds=ids
+            )
+            waiter = client.get_waiter('instance_running')
+            waiter.wait(
+                InstanceIds=ids
+            )
+            print('instances running')
+            break
+        except Exception as e:
+            print(e)
+            print('trying again')
+            continue
+    return status
+# *********************************************************
+# Start all VMS
+# *********************************************************
+
+
+def stop_instances(ids, n_attempts=2):
+    client = boto3.client('ec2')
+    print('stopping instances')
+    status = False
+    for attempts in range(n_attempts):
+        try:
+            status = True
+            response = client.stop_instances(
+                InstanceIds=ids
+            )
+            waiter = client.get_waiter('instance_stopped')
+            waiter.wait(
+                InstanceIds=ids
+            )
+            print('instances stopped')
+            break
+        except Exception as e:
+            print(e)
+            print('trying again')
+            continue
+    return status
+
+# *********************************************************
+# Start all VMS
+# *********************************************************
+
+
+def terminate_instances(ids, n_attempts=2):
     client = boto3.client('ec2')
     print('terminating instances')
-    response = client.terminate_instances(
-        InstanceIds=ids
-    )
-    waiter = client.get_waiter('instance_terminated')
-    waiter.wait(
-        InstanceIds=ids
-    )
-    print('instances terminated')
+    status = False
+    for attempts in range(n_attempts):
+        try:
+            status = True
+            response = client.terminate_instances(
+                InstanceIds=ids
+            )
+            waiter = client.get_waiter('instance_terminated')
+            waiter.wait(
+                InstanceIds=ids
+            )
+            print('instances terminated')
+            break
+        except Exception as e:
+            print(e)
+            print('trying again')
+            continue
+    return status
+
+
 
 # *****************************************************************************************
 #
@@ -233,7 +327,7 @@ def validateTemplate(TemplateBody):
     client = boto3.client('cloudformation')
 
     print('Validating template.')
-    log.debug('Template: ' + str(TemplateBody))
+    # log.debug('Template: ' + str(TemplateBody))
     with open(TemplateBody, 'r') as f:
         response = client.validate_template(TemplateBody=f.read())
 
@@ -243,7 +337,7 @@ def readConfigFile(configFile):
     config.read(configFile)
 
     print('Reading configure file.')
-    log.debug('File: ' + str(configFile))
+    # log.debug('File: ' + str(configFile))
 
     if 'Template' not in config['cloudformation']:
         print("You must specify a template")
@@ -268,31 +362,31 @@ def readConfigFile(configFile):
 
     if 'MasterInstanceType' not in config['aws']:
         config['aws']['MasterInstanceType'] = 'c5.large'
-    log.debug('Master Instance Type: ' + config['aws']['MasterInstanceType'])
+  # log.debug('Master Instance Type: ' + config['aws']['MasterInstanceType'])
 
     if 'ComputeInstanceType' not in config['aws']:
         config['aws']['ComputeInstanceType'] = 'c5.large'
-    log.debug('Compute Instance Type: ' + config['aws']['ComputeInstanceType'])
+  # log.debug('Compute Instance Type: ' + config['aws']['ComputeInstanceType'])
 
     if 'AvailabilityZone' not in config['aws']:
         config['aws']['AvailabilityZone'] = 'us-east-1a'
-    log.debug('Availability Zone: ' + config['aws']['AvailabilityZone'])
+  # log.debug('Availability Zone: ' + config['aws']['AvailabilityZone'])
 
     if 'VPCID' not in config['aws']:
         config['aws']['VPCID'] = 'NONE'
-    log.debug('VPC Id: ' + config['aws']['VPCID'])
+  # log.debug('VPC Id: ' + config['aws']['VPCID'])
 
     if 'SubnetID' not in config['aws']:
         config['aws']['SubnetID'] = 'NONE'
-    log.debug('Subnet: ' + config['aws']['SubnetID'])
+  # log.debug('Subnet: ' + config['aws']['SubnetID'])
 
     if 'InternetGatewayID' not in config['aws']:
         config['aws']['InternetGatewayID'] = 'NONE'
-    log.debug('Internet Gateway Id: ' + config['aws']['InternetGatewayID'])
+  # log.debug('Internet Gateway Id: ' + config['aws']['InternetGatewayID'])
 
     if 'SecurityGroupID' not in config['aws']:
         config['aws']['SecurityGroupID'] = 'NONE'
-    log.debug('Security Group: ' + config['aws']['SecurityGroupID'])
+  # log.debug('Security Group: ' + config['aws']['SecurityGroupID'])
 
     print('Configure file read!')
     return True, config
@@ -355,7 +449,7 @@ def createCloudEnviroment(configFile):
                     }
                 ]
             )
-            log.debug('Stack launched, waiting to complete...')
+          # log.debug('Stack launched, waiting to complete...')
             waiter = client.get_waiter('stack_create_complete')
             waiter.wait(
                 StackName=config['cloudformation']['StackName']

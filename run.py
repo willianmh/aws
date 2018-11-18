@@ -93,8 +93,8 @@ def main():
         'disable_hyperthreading.sh',
         'run_all.sh',
         ]
-    aws.uploadFiles(ids, path_to_key, files, 'ubuntu')
-
+    # aws.uploadFiles(ids, path_to_key, files, 'ubuntu')
+    aws.transfer_parallel(ids, path_to_key, files)
     # necessary commands to to run mpi applications
     commands = [
         'echo 0 | sudo tee cat /proc/sys/kernel/yama/ptrace_scope',

@@ -37,7 +37,7 @@ do
   for i in $(cat hostname | head -n ${machines});do
     if [ ! "$i" == "$(hostname)" ]; then
       for attempts in `seq 1 10`; do
-        scp -r run_marmousi_template ${i}:
+        scp -q -r run_marmousi_template ${i}:
         if [ $? == 0 ]; then
           break
         fi
@@ -48,7 +48,7 @@ do
   for i in $(cat hostname | head -n ${machines});do
     if [ ! "$i" == "$(hostname)" ]; then
       ssh $i "echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope"
-      scp -r fwi_src ${i}:
+      scp -q -r fwi_src ${i}:
     fi
   done
 

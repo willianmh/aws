@@ -287,6 +287,7 @@ def launch_instances(path_to_instance, path_to_file):
 def start_instances(ids, n_attempts=2):
     client = boto3.client('ec2')
     print('starting instances')
+    print(ids)
     status = False
     for attempts in range(n_attempts):
         try:

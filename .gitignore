@@ -5,3 +5,7 @@ ssh_aws_nas_machines
 accessKeys.csv
 *.pem
 results
+hostnames
+hosts
+public_ip
+private_ip

@@ -17,6 +17,9 @@ sed -i '1s/^/0\n/' mumps_input
 sed -i 's/vp_Marmousi_init qp rho epsilon_m delta_m theta_m/vp_Marmousi_exact qp rho/' fdfd_input
 sed -i 's/0           ! Hicks interpolation (1 YES, 0 NO)/1           ! Hicks interpolation (1 YES, 0 NO)/' fdfd_input
 sed -i 's/1            ! mode of the code (0 = MODELING, 1 = INVERSION)/0            ! mode of the code (0 = MODELING, 1 = INVERSION)/' toy2dac_input
+sed -i 's/1 !Nfreq/5 !Nfreq/' freq_management
+sed -i 's/3. 5. 7. 9./3. 4. 5. 6. 7./' freq_management
+sed -i 's/10        ! number of nonlinear iterations/50        ! number of nonlinear iterations' fwi_input
 
 ulimit -s unlimited
 
@@ -25,12 +28,11 @@ mpirun -n 4 ../toy2dac/bin/toy2dac
 sed -i 's/vp_Marmousi_exact qp rho/vp_Marmousi_init qp rho/' fdfd_input
 sed -i 's/0            ! mode of the code (0 = MODELING, 1 = INVERSION)/1            ! mode of the code (0 = MODELING, 1 = INVERSION)/' toy2dac_input
 
-
 for machines in 1 2 4 8 16 32 64
 do
 
   cd ~/
-  head -n ${machines} instances_ids > instances_to_start
+  head -n ${machines} instances_ids | tail -n $((${machines}-1)) > instances_to_start
   python3 aws/start.py instances_to_start
 
   tar -xzf run_marmousi_template.tar.gz run_marmousi_template
@@ -38,7 +40,7 @@ do
 
   echo "copying run_marmousi to others workers"
   python3 aws/transfer.py instances_to_start willkey.pem fwi_src.tar.gz run_marmousi_template.tar.gz
-
+  python3 aws/execute.py instances_to_start willkey.pem 'tar -xzf fwi_src.tar.gz' 'tar -xzf run_marmousi_template.tar.gz'
 
   # for i in $(cat hostname | head -n ${machines});do
   #   if [ ! "$i" == "$(hostname)" ]; then

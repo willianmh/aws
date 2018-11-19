@@ -13,9 +13,9 @@ def main():
     with open(id_file, 'r') as file:
         for line in file:
             ids.append(line.rstrip())
-
-    aws.transferParallel(ids, key, paths_to_files)
-    time.sleep(1)
+    if len(ids) > 0:
+        aws.transferParallel(ids, key, paths_to_files)
+        time.sleep(1)
 
 
 main()

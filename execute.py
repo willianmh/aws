@@ -16,8 +16,9 @@ def main():
         for line in file:
             ids.append(line.rstrip())
 
-    aws.executeParallel(ids, key, commands)
-    time.sleep(1)
+    if len(ids) > 0:
+        aws.executeParallel(ids, key, commands)
+        time.sleep(1)
 
 
 main()

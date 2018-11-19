@@ -14,9 +14,9 @@ def main():
     with open(path_to_file, 'r') as file:
         for line in file:
             ids.append(line.rstrip())
+    if len(ids) > 0:
+        aws.stop_instances(ids)
+        time.sleep(1)
 
-    aws.stop_instances(ids)
-    time.sleep(1)
 
-    
 main()

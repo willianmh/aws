@@ -6,7 +6,7 @@ for i in $(cat hostname)
 do
 	if [ ! "$(hostname)" == "$i" ]
 	then
-		scp -r $FILE ${i}:
+		scp -qr $FILE ${i}: &
 		echo $i
 	fi
 done

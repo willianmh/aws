@@ -3,25 +3,23 @@
 source /opt/intel/compilers_and_libraries_2018.3.222/linux/bin/compilervars.sh -arch intel64 -platform linux
 source /opt/intel/parallel_studio_xe_2018.3.051/bin/psxevars.sh
 
-echo "pinging everyone to everyone"
-for host in $(cat private_ip)
-do
-  ssh $host ./ping.sh &
-done
-
-wait
-
-mkdir -p latency
-for host in $(cat private_ip)
-do
-  scp -r $host:pings/* latency
-done
-
-for host in
+# echo "pinging everyone to everyone"
+# for host in $(cat private_ip)
+# do
+#   ssh $host ./ping.sh &
+# done
+#
+# wait
+#
+# mkdir -p latency
+# for host in $(cat private_ip)
+# do
+#   scp -r $host:pings/* latency
+# done
 
 cd ~/
 rm -rf run_marmousi_template
-cp -r toy2dac/run_marmousi_template .
+cp -r toy2dac/run_marmousi_template .c
 cp private_ip run_marmousi_template
 cp private_ip fwi_src
 
@@ -86,7 +84,6 @@ do
 
   for ppn in 1 2 4 8
   do
-    cd ~/run_marmousi_template/
     echo "ppn ${ppn}"
     total_processes=$((${machines}*${ppn}))
     omp=$((8/$ppn))
@@ -96,6 +93,15 @@ do
     mkdir -p ${result_dir_toy2dac}
     mkdir -p ${result_dir_fwi}
 
+    cd ~/fwi_src/examples
+    cat ~/private_ip | head -n ${machines} > hostfile
+    echo "Runnign fwi joe"
+    for i in `seq 1 3`; do
+      echo "iteration ${i}"
+      ./run_marmousi_141_681.sh $ppn $machines 5 120 >> ${result_dir_fwi}/fwi_m${machines}_ppn${ppn}_${i}.out
+    done
+
+    cd ~/run_marmousi_template/
     cat private_ip | head -n ${machines} > hostfile
     echo "Runnign toy2dac"
     for i in `seq 1 3`; do
@@ -107,12 +113,5 @@ do
       -f hostfile ~/toy2dac/bin/toy2dac >> ${result_dir_toy2dac}/inversion_m${machines}_ppn${ppn}_${i}.out
     done
     sleep 1
-    cd ~/fwi_src/examples
-    cat ~/private_ip | head -n ${machines} > hostfile
-    echo "Runnign fwi joe"
-    for i in `seq 1 3`; do
-      echo "iteration ${i}"
-      ./run_marmousi_141_681.sh $ppn $machines 5 120 >> ${result_dir_fwi}/fwi_m${machines}_ppn${ppn}_${i}.out
-    done
   done
 done

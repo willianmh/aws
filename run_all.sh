@@ -19,7 +19,7 @@ source /opt/intel/parallel_studio_xe_2018.3.051/bin/psxevars.sh
 
 cd ~/
 rm -rf run_marmousi_template
-cp -r toy2dac/run_marmousi_template .c
+cp -r toy2dac/run_marmousi_template .
 cp private_ip run_marmousi_template
 cp private_ip fwi_src
 
@@ -88,7 +88,7 @@ do
     total_processes=$((${machines}*${ppn}))
     omp=$((8/$ppn))
     result_dir_toy2dac=/home/ubuntu/results/toy2dac/
-    result_dir_fwi=/home/ubuntu/results/toy2dac/
+    result_dir_fwi=/home/ubuntu/results/joe_fwi/
 
     mkdir -p ${result_dir_toy2dac}
     mkdir -p ${result_dir_fwi}

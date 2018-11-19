@@ -27,20 +27,26 @@ mpirun -n 4 ../toy2dac/bin/toy2dac
 
 sed -i 's/vp_Marmousi_exact qp rho/vp_Marmousi_init qp rho/' fdfd_input
 sed -i 's/0            ! mode of the code (0 = MODELING, 1 = INVERSION)/1            ! mode of the code (0 = MODELING, 1 = INVERSION)/' toy2dac_input
+cd ~/
+cp instances_ids ids
 
-for machines in 1 2 4 8 16 32 64
+for machines in 64 32 16 8 4 2 1
 do
 
   cd ~/
-  head -n ${machines} instances_ids | tail -n $((${machines}-1)) > instances_to_start
-  python3 aws/start.py instances_to_start
+  tail -n $((64-${machines})) instances_ids > instances_to_stop # from the alive, stop some of them
 
-  tar -xzf run_marmousi_template.tar.gz run_marmousi_template
-  tar -xzf fwi_src.tar.gz fwi_src
+  python3 aws/stop.py instances_to_stop
 
-  echo "copying run_marmousi to others workers"
-  python3 aws/transfer.py instances_to_start willkey.pem fwi_src.tar.gz run_marmousi_template.tar.gz
-  python3 aws/execute.py instances_to_start willkey.pem 'tar -xzf fwi_src.tar.gz' 'tar -xzf run_marmousi_template.tar.gz'
+  # head -n ${machines} instances_ids | tail -n $((${machines}-1)) > instances_to_start
+  # python3 aws/start.py instances_to_start
+
+  # tar -xzf run_marmousi_template.tar.gz run_marmousi_template
+  # tar -xzf fwi_src.tar.gz fwi_src
+
+  # echo "copying run_marmousi to others workers"
+  # python3 aws/transfer.py instances_to_start willkey.pem fwi_src.tar.gz run_marmousi_template.tar.gz
+  # python3 aws/execute.py instances_to_start willkey.pem 'tar -xzf fwi_src.tar.gz' 'tar -xzf run_marmousi_template.tar.gz'
 
   # for i in $(cat hostname | head -n ${machines});do
   #   if [ ! "$i" == "$(hostname)" ]; then
@@ -53,12 +59,12 @@ do
   #     done
   #   fi
   # done
-  for i in $(cat hostname | head -n ${machines});do
-    if [ ! "$i" == "$(hostname)" ]; then
-      ssh $i "echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope"
-      # scp -q -r fwi_src ${i}:
-    fi
-  done
+  # for i in $(cat hostname | head -n ${machines});do
+  #   if [ ! "$i" == "$(hostname)" ]; then
+  #     ssh $i "echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope"
+  #     # scp -q -r fwi_src ${i}:
+  #   fi
+  # done
 
   cd run_marmousi_template/
 

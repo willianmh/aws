@@ -104,6 +104,7 @@ def main():
         'chmod +x copy_all.sh',
         'chmod +x disable_hyperthreading.sh',
         'chmod +x run_all.sh',
+        'sudo ./disable_hyperthreading.sh',
         ]
     # aws.executeCommands(ids, path_to_key, commands)
     aws.executeParallel(ids, path_to_key, commands)

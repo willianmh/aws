@@ -3,13 +3,27 @@
 source /opt/intel/compilers_and_libraries_2018.3.222/linux/bin/compilervars.sh -arch intel64 -platform linux
 source /opt/intel/parallel_studio_xe_2018.3.051/bin/psxevars.sh
 
-N_ITERATIONS=$2
+echo "pinging everyone to everyone"
+for host in $(cat private_ip)
+do
+  ssh $host ./ping.sh &
+done
 
+wait
+
+mkdir -p latency
+for host in $(cat private_ip)
+do
+  scp -r $host:pings/* latency
+done
+
+for host in
 
 cd ~/
-rm -r run_marmousi_template
+rm -rf run_marmousi_template
 cp -r toy2dac/run_marmousi_template .
 cp private_ip run_marmousi_template
+cp private_ip fwi_src
 
 echo "modeling"
 cd run_marmousi_template/
@@ -29,15 +43,16 @@ sed -i 's/vp_Marmousi_exact qp rho/vp_Marmousi_init qp rho/' fdfd_input
 sed -i 's/0            ! mode of the code (0 = MODELING, 1 = INVERSION)/1            ! mode of the code (0 = MODELING, 1 = INVERSION)/' toy2dac_input
 cd ~/
 ./copy_all.sh run_marmousi_template
+./copy_all.sh fwi_src
 
 for machines in 64 32 16 8 4 2 1
 do
 
   cd ~/
   n_stop=$((64-${machines}))
+
   echo "stopping ${n_stop} machines"
   tail -n ${n_stop} instances_ids > instances_to_stop # from the alive, stop some of them
-
   python3 aws/stop.py instances_to_stop
 
   # head -n ${machines} instances_ids | tail -n $((${machines}-1)) > instances_to_start
@@ -68,28 +83,36 @@ do
   #   fi
   # done
 
-  cd run_marmousi_template/
 
-  echo "Runnign toy2dac"
   for ppn in 1 2 4 8
   do
+    cd ~/run_marmousi_template/
     echo "ppn ${ppn}"
     total_processes=$((${machines}*${ppn}))
     omp=$((8/$ppn))
-    result_dir=/home/ubuntu/results/toy2dac/
+    result_dir_toy2dac=/home/ubuntu/results/toy2dac/
+    result_dir_fwi=/home/ubuntu/results/toy2dac/
 
-    mkdir -p ${result_dir}
+    mkdir -p ${result_dir_toy2dac}
+    mkdir -p ${result_dir_fwi}
 
     cat private_ip | head -n ${machines} > hostfile
-
-    mpirun -n ${total_processes} \
-    -ppn ${ppn} \
-    -genv OMP_NUM_THREADS=${omp} \
-    -genv I_MPI_PIN_DOMAIN=omp \
-    -f hostfile ~/toy2dac/bin/toy2dac >> ${result_dir}/inversion_${machines}_${ppn}.out
-
+    echo "Runnign toy2dac"
+    for i in `seq 1 3`; do
+      echo "iteration ${i}"
+      mpirun -n ${total_processes} \
+      -ppn ${ppn} \
+      -genv OMP_NUM_THREADS=${omp} \
+      -genv I_MPI_PIN_DOMAIN=omp \
+      -f hostfile ~/toy2dac/bin/toy2dac >> ${result_dir_toy2dac}/inversion_m${machines}_ppn${ppn}_${i}.out
+    done
     sleep 1
+    cd ~/fwi_src/examples
+    cat ~/private_ip | head -n ${machines} > hostfile
+    echo "Runnign fwi joe"
+    for i in `seq 1 3`; do
+      echo "iteration ${i}"
+      ./run_marmousi_141_681.sh $ppn $machines 5 120 >> ${result_dir_fwi}/fwi_m${machines}_ppn${ppn}_${i}.out
+    done
   done
-
-
 done

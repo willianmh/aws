@@ -33,22 +33,28 @@ do
   head -n ${machines} instances_ids > instances_to_start
   python3 aws/start.py instances_to_start
 
+  tar -xzf run_marmousi_template.tar.gz run_marmousi_template
+  tar -xzf fwi_src.tar.gz fwi_src
+
   echo "copying run_marmousi to others workers"
-  for i in $(cat hostname | head -n ${machines});do
-    if [ ! "$i" == "$(hostname)" ]; then
-      for attempts in `seq 1 10`; do
-        scp -q -r run_marmousi_template ${i}:
-        if [ $? == 0 ]; then
-          break
-        fi
-        sleep 4
-      done
-    fi
-  done
+  python3 aws/transfer.py instances_to_start willkey.pem fwi_src.tar.gz run_marmousi_template.tar.gz
+
+
+  # for i in $(cat hostname | head -n ${machines});do
+  #   if [ ! "$i" == "$(hostname)" ]; then
+  #     for attempts in `seq 1 10`; do
+  #       scp -q -r run_marmousi_template ${i}:
+  #       if [ $? == 0 ]; then
+  #         break
+  #       fi
+  #       sleep 4
+  #     done
+  #   fi
+  # done
   for i in $(cat hostname | head -n ${machines});do
     if [ ! "$i" == "$(hostname)" ]; then
       ssh $i "echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope"
-      scp -q -r fwi_src ${i}:
+      # scp -q -r fwi_src ${i}:
     fi
   done
 

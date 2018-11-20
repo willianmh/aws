@@ -3,19 +3,19 @@
 source /opt/intel/compilers_and_libraries_2018.3.222/linux/bin/compilervars.sh -arch intel64 -platform linux
 source /opt/intel/parallel_studio_xe_2018.3.051/bin/psxevars.sh
 
-# echo "pinging everyone to everyone"
-# for host in $(cat private_ip)
-# do
-#   ssh $host ./ping.sh &
-# done
-#
-# wait
-#
-# mkdir -p latency
-# for host in $(cat private_ip)
-# do
-#   scp -r $host:pings/* latency
-# done
+echo "pinging everyone to everyone"
+for host in $(cat private_ip)
+do
+  ssh $host ./ping.sh &
+done
+
+wait
+
+mkdir -p latency
+for host in $(cat private_ip)
+do
+  scp -r $host:pings/* latency
+done
 
 cd ~/
 rm -rf run_marmousi_template

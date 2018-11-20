@@ -24,11 +24,10 @@ setup_ssh_keys() {
     ssh-keyscan -H $hostname >> ~/.ssh/known_hosts
   done
 
+  SSH_ADDR="ubuntu@$(cat private_ip | tail -n 1)"
 
-  SSH_ADDR="ubuntu@$(cat public_ip | tail -n 1)"
-
-  ssh ${SSH_ADDR} "ssh-keygen -f ~/.ssh/id_rsa_new -t rsa -N '' "
-  scp ${SSH_ADDR}:.ssh/id_rsa_new.pub id_rsa_coordinator.pub
+  ssh-keygen -f ~/.ssh/id_rsa_new -t rsa -N ''
+  cp ~/.ssh/id_rsa_new.pub id_rsa_coordinator.pub
 
   for hostname in $(cat public_ip); do
       # echo "Put ssh key on $hostname"

@@ -94,7 +94,7 @@ do
     echo -e "\t- Runnign fwi joe"
     for i in `seq 1 3`; do
       echo -e "\t\titeration ${i}"
-      ./run_marmousi_141_681.sh $ppn $machines 5 120 ${result_dir_fwi}/time_m${machines}_ppn${ppn}_${i}.out >> ${result_dir_fwi}/fwi_m${machines}_ppn${ppn}_${i}.out
+      ./run_marmousi_141_681.sh $ppn $machines 5 160 ${result_dir_fwi}/time_m${machines}_ppn${ppn}_${i}.out >> ${result_dir_fwi}/fwi_m${machines}_ppn${ppn}_${i}.out
     done
 
     cd ~/fwi_toy2dac/

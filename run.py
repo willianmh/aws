@@ -111,6 +111,8 @@ def main():
 
     commands = ['./firstscript.sh']
     aws.executeCommands(ids[:1], path_to_key, commands)
+
+    os.system('scp -qr -i willkey ../fwi_src ubuntu@$(cat public_ip | head -n 1):')
     # n_iterations = 1
     # print('running fwi with %d processes' % total_cores)
     # commands = ['./run_fwi.sh ' + str(total_cores) + ' ' + str(n_iterations)]

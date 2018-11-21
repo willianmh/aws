@@ -7,6 +7,5 @@ do
 	if [ ! "$(hostname)" == "$i" ]
 	then
 		scp -qr $FILE ${i}: &
-		echo $i
 	fi
 done

@@ -9,3 +9,5 @@ do
 		scp -qr $FILE ${i}: &
 	fi
 done
+
+wait

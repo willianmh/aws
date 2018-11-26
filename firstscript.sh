@@ -56,7 +56,7 @@ set_nfs() {
     if [ ! "$(hostname)" == "$host" ];then
       ssh $host mkdir -p ~/shared
       ssh $host 'sudo mount -t nfs $(cat ~/master):/home/ubuntu/shared ~/shared'
-      ssh $host 'echo $(cat ~/master):/home/ubuntu/shared /home/ubuntu/shared nfs" | sudo tee -a /etc/fstab'
+      ssh $host 'echo "$(cat ~/master):/home/ubuntu/shared /home/ubuntu/shared nfs" | sudo tee -a /etc/fstab'
     fi
   done
 }

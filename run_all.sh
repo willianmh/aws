@@ -3,20 +3,21 @@
 # source /opt/intel/compilers_and_libraries_2018.3.222/linux/bin/compilervars.sh -arch intel64 -platform linux
 source /opt/intel/parallel_studio_xe_2019.1.053/bin/psxevars.sh
 
-echo -e "pinging everyone to everyone"
-for host in $(cat private_ip)
-do
-  ssh $host ./ping.sh &
-done
+if [ ! -d ~/latency ];then
+  echo -e "pinging everyone to everyone"
+  for host in $(cat private_ip)
+  do
+    ssh $host ./ping.sh &
+  done
 
-wait
+  wait
 
-mkdir -p latency
-for host in $(cat private_ip)
-do
-  scp -qr $host:pings/* latency
-done
-
+  mkdir -p latency
+  for host in $(cat private_ip)
+  do
+    scp -qr $host:pings/* latency
+  done
+fi
 cd ~/
 
 cp private_ip fwi_toy2dac/

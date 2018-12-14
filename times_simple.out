@@ -1,0 +1,14 @@
+marmousi 751x2301	4 frequencies
+	ppn	nodes	time
+	2	2	75m37758s
+	2	4	56m26720s
+	2	8	36m28409s
+
+	4	2	54m54934s
+	4	4	40m5259s
+	4	8	51m44259s
+
+	6	2	50m7085s
+	6	4	48m9639s
+	6	8	45m36869s
+

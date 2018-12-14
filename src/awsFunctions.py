@@ -9,59 +9,37 @@ from pathlib import Path
 import math
 import threading
 
-
-# class Logger:
-#     def __init__(self):
-#         self.debug = False
-#
-#     def write(self, s):
-#         print(datetime.datetime.now() + " " + s)
-#
-#     def debug(self, s):
-#         if self.debug:
-#             self.write(s)
-# debug = False
-# log = Logger()
-# log.debug = debug
-
-basedir = os.getcwd().split('aws',1)[0] + 'aws'
-
-
 # *********************************************************
 # Broadcast
 # *********************************************************
 #
-# upload files to all VMs
-#
+# upload files to all VMs 
+# NOTE: It do NOT WORK with DIRECTORIES!!!!!
 
 
-def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu', n_attempts=7):
+def upload_files(instances_ids, path_to_key, paths_to_files, username='ubuntu', n_attempts=7):
     ec2 = boto3.resource('ec2')
 
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    print('uploanding files')
+    print('uploading files')
     # k = paramiko.RSAKey.from_private_key_file(path_to_key)
 
     transfer_status = {}
-    # iterate over each instance
-    for id in instancesids:
-
+    for id in instances_ids:  # iterate over each instance
         # get IP
         ip = ec2.Instance(id).public_ip_address
 
         transfer_status[id] = False
-        # Try to upload
-        for attempts in range(n_attempts):
+        for attempts in range(n_attempts):  # Try to upload
             try:
                 transfer_status[id] = True  # update status for specific instance
-
                 # paramiko stuff
                 ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
                 ftp_client = ssh_client.open_sftp()
-                for path_to_file in paths_to_files:
-                    file = os.path.basename(path_to_file)
-                    ftp_client.put(path_to_file, '/home/ubuntu/'+file)  # copies on home !!!! ****************
+                for file in paths_to_files:
+                    # file = os.path.basename(path_to_file)
+                    ftp_client.put(file, paths_to_files[file])
                 ftp_client.close()
                 ssh_client.close()
                 print('upload success on %s!' % str(ip))
@@ -76,13 +54,13 @@ def uploadFiles(instancesids, path_to_key, paths_to_files, username='ubuntu', n_
     return transfer_status
 
 
-def transferParallel(instancesids, path_to_key, paths_to_files, username='ubuntu', n_attempts=7):
-    if len(instancesids) >= 4:
-        y = math.ceil(len(instancesids)/4)
-        t1 = threading.Thread(target=uploadFiles, args=(instancesids[:y], path_to_key, paths_to_files, username, n_attempts,))
-        t2 = threading.Thread(target=uploadFiles, args=(instancesids[y:2*y], path_to_key, paths_to_files, username, n_attempts,))
-        t3 = threading.Thread(target=uploadFiles, args=(instancesids[2*y:3*y], path_to_key, paths_to_files, username, n_attempts,))
-        t4 = threading.Thread(target=uploadFiles, args=(instancesids[3*y:len(instancesids)], path_to_key, paths_to_files, username, n_attempts,))
+def transfer_parallel(instances_ids, path_to_key, paths_to_files, username='ubuntu', n_attempts=7):
+    if len(instances_ids) >= 4:
+        y = math.ceil(len(instances_ids)/4)
+        t1 = threading.Thread(target=upload_files, args=(instances_ids[:y], path_to_key, paths_to_files, username, n_attempts,))
+        t2 = threading.Thread(target=upload_files, args=(instances_ids[y:2*y], path_to_key, paths_to_files, username, n_attempts,))
+        t3 = threading.Thread(target=upload_files, args=(instances_ids[2*y:3*y], path_to_key, paths_to_files, username, n_attempts,))
+        t4 = threading.Thread(target=upload_files, args=(instances_ids[3*y:len(instances_ids)], path_to_key, paths_to_files, username, n_attempts,))
 
         t1.start()
         t2.start()
@@ -94,7 +72,7 @@ def transferParallel(instancesids, path_to_key, paths_to_files, username='ubuntu
         t3.join()
         t4.join()
     else:
-        uploadFiles(instancesids, path_to_key, paths_to_files, username, n_attempts)
+        upload_files(instances_ids, path_to_key, paths_to_files, username, n_attempts)
 # *********************************************************
 # Download Files to local
 # *********************************************************
@@ -103,9 +81,9 @@ def transferParallel(instancesids, path_to_key, paths_to_files, username='ubuntu
 #
 
 
-def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubuntu', n_attempts=7):
+def download_file(instance_id, path_to_key, remote_path, local_path, username='ubuntu', n_attempts=7):
     ec2 = boto3.resource('ec2')
-    instance = ec2.Instance(instanceid)
+    instance = ec2.Instance(instance_id)
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -136,7 +114,7 @@ def downloadFile(instanceid, path_to_key, remote_path, local_path, username='ubu
 #
 
 
-def executeCommands(instancesids, path_to_key, commands, username='ubuntu', n_attempts=7):
+def execute_commands(instances_ids, path_to_key, commands, username='ubuntu', n_attempts=7):
     ec2 = boto3.resource('ec2')
     # if you need to wait your command, you must read its output, otherwise it will return and your command may not be executed
     output = []
@@ -148,7 +126,7 @@ def executeCommands(instancesids, path_to_key, commands, username='ubuntu', n_at
     # k = paramiko.RSAKey.from_private_key_file(path_to_key)
 
     execute_status = {}
-    for id in instancesids:
+    for id in instances_ids:
         ip = ec2.Instance(id).public_ip_address
         execute_status[id] = False
         for attempts in range(n_attempts):
@@ -156,7 +134,7 @@ def executeCommands(instancesids, path_to_key, commands, username='ubuntu', n_at
                 execute_status[id] = True
                 ssh_client.connect(hostname=ip, username=username, key_filename=path_to_key)
                 for command in commands:
-                    print('executing commmand: %s' % command)
+                    print('executing command: %s' % command)
                     stdin, stdout, stderr = ssh_client.exec_command(command)
                     output.append(stdout.readlines())
                     output_err.append(stderr.readlines())
@@ -167,18 +145,18 @@ def executeCommands(instancesids, path_to_key, commands, username='ubuntu', n_at
                 print('trying again')
                 time.sleep(1)
                 continue
-            if not execute_status[id]:
-                print('could not execute files to instance %s' % id)
+        if not execute_status[id]:
+            print('could not execute files to instance %s' % id)
     return execute_status, output, output_err
 
 
-def executeParallel(instancesids, path_to_key, commands, username='ubuntu', n_attempts=7):
-    if len(instancesids) >= 4:
-        y = math.ceil(len(instancesids)/4)
-        t1 = threading.Thread(target=executeCommands, args=(instancesids[:y], path_to_key, commands, username, n_attempts,))
-        t2 = threading.Thread(target=executeCommands, args=(instancesids[y:2*y], path_to_key, commands, username, n_attempts,))
-        t3 = threading.Thread(target=executeCommands, args=(instancesids[2*y:3*y], path_to_key, commands, username, n_attempts,))
-        t4 = threading.Thread(target=executeCommands, args=(instancesids[3*y:len(instancesids)], path_to_key, commands, username, n_attempts,))
+def execute_parallel(instances_ids, path_to_key, commands, username='ubuntu', n_attempts=7):
+    if len(instances_ids) >= 4:
+        y = math.ceil(len(instances_ids)/4)
+        t1 = threading.Thread(target=execute_commands, args=(instances_ids[:y], path_to_key, commands, username, n_attempts,))
+        t2 = threading.Thread(target=execute_commands, args=(instances_ids[y:2*y], path_to_key, commands, username, n_attempts,))
+        t3 = threading.Thread(target=execute_commands, args=(instances_ids[2*y:3*y], path_to_key, commands, username, n_attempts,))
+        t4 = threading.Thread(target=execute_commands, args=(instances_ids[3*y:len(instances_ids)], path_to_key, commands, username, n_attempts,))
 
         t1.start()
         t2.start()
@@ -190,7 +168,7 @@ def executeParallel(instancesids, path_to_key, commands, username='ubuntu', n_at
         t3.join()
         t4.join()
     else:
-        executeCommands(instancesids, path_to_key, commands, username, n_attempts)
+        execute_commands(instances_ids, path_to_key, commands, username, n_attempts)
 
 # *********************************************************
 # Launch instances
@@ -200,53 +178,92 @@ def executeParallel(instancesids, path_to_key, commands, username='ubuntu', n_at
 #
 
 
+def allocate_host(instance_type, quantity, availability_zone, auto_placement, Tags):
+    client = boto3.client('ec2')
+
+    response = client.allocate_hosts(
+        InstanceType=instance_type,
+        Quantity=quantity,
+        AvailabilityZone=availability_zone,
+        AutoPlacement=auto_placement,
+        TagSpecifications=[
+            {
+                'ResourceType': 'dedicated-host',
+                'Tags': Tags
+            },
+        ]
+    )
+
+    return response
+
+
+def check_placement_group(placement_name):
+    ec2 = boto3.resource('ec2')
+    placement_groups = list(ec2.placement_groups.all())
+    not_exist = True
+    if len(placement_groups):
+        for placement_group in placement_groups:
+            if placement_group.group_name == placement_name:
+                not_exist = False
+    return not_exist
+
+
 def launch_instances(path_to_instance, path_to_file):
     """
     path_to_instance: path for template file
     path_to_file: path for configure file
 
     it will return instances objects and ids
-    intances: list of objects
+    instances: list of objects
     ids: list of strings
     """
+    # Initialize the ec2 object
+    ec2 = boto3.resource('ec2')
+    client = boto3.client('ec2')
+    iam = boto3.resource('iam')
+    current_user = iam.CurrentUser()
 
     user_data = """#!/bin/bash
 """
     cfg = configparser.ConfigParser()
     cfg.read(path_to_file)
 
-    # Initialize the ec2 object
-    ec2 = boto3.resource('ec2', region_name='us-east-1')
-    client = boto3.client('ec2')
+    Tags =[{'owner': current_user.user_name}]
+    for tag in cfg['tags']:
+        if not tag == 'owner':
+            Tags.append({
+                tag: cfg['tags'][tag]
+            })
+
     machine_definitions = json.load(open(path_to_instance, 'r'))
 
-    if cfg['placement']['enable'] == 'True' and cfg['tenancy']['enable'] == 'True':
-        print('Error in definitions. You must select between placement and tenancy')
-        exit()
+    # Configure Placement
+    if 'PlacementType' in cfg['instance']:
+        if cfg['instance']['placement'] == 'placement':  # Configure Placement Group
+            not_exist = check_placement_group(cfg['placement']['name'])  # Check if placement already exists
+            if not_exist:
+                print('creating placement_group: %s' % cfg['placement']['name'])
+                response = client.create_placement_group(
+                    GroupName=cfg['placement']['name'],
+                    Strategy=cfg['placement']['strategy']
+                )
+            machine_definitions['Placement']['GroupName'] = cfg['placement']['name']
 
-    # Launch Instances on Placement
-    if cfg['placement']['enable'] == 'True':
-        # Check if placement already exists
-        placement_groups = list(ec2.placement_groups.all())
-        not_exist = True
-        if len(placement_groups):
-            for placement_group in placement_groups:
-                if placement_group.group_name == cfg['placement']['name']:
-                    not_exist = False
+        elif cfg['instance']['placement'] == 'tenancy':  # Configure Tenancy
+            machine_definitions['Placement']['Tenancy'] = cfg['tenancy']['type']
 
-        if not_exist:
-            print('creating placement_group: %s' % cfg['placement']['name'])
-            response = client.create_placement_group(
-                GroupName=cfg['placement']['name'],
-                Strategy=cfg['placement']['strategy']
-            )
-        machine_definitions['Placement']['GroupName'] = cfg['placement']['name']
-    # Launch Instances on Specific Tenancy
-    if cfg['tenancy']['enable'] == 'True':
-        machine_definitions['Placement']['Tenancy'] = cfg['tenancy']['type']
-        if cfg['placement']['type'] == 'host':
-            machine_definitions['Placement']['HostId'] = cfg['placement']['hostdID']
-            machine_definitions['Placement']['Affinity'] = 'host'
+            if cfg['placement']['type'] == 'host':
+                reserved_hosts = client.describe_hosts(
+                    HostIds=[
+                        cfg['placement']['hostdID']
+                    ]
+                )['Hosts']
+                if len(reserved_hosts) == 0:
+                    print('error: cannot found dedicated host')
+                    exit()
+
+                machine_definitions['Placement']['HostId'] = cfg['placement']['hostdID']
+                machine_definitions['Placement']['Affinity'] = 'host'
 
     # Overwrite definitions with configure file
     machine_definitions['UserData'] = user_data
@@ -255,6 +272,9 @@ def launch_instances(path_to_instance, path_to_file):
     machine_definitions['SecurityGroupIds'][0] = cfg['instance']['SecurityGroupID']
     machine_definitions['MaxCount'] = int(cfg['instance']['MaxCount'])
     machine_definitions['MinCount'] = int(cfg['instance']['MinCount'])
+
+    machine_definitions['BlockDeviceMappings'][0]['Ebs']['VolumeType'] = cfg['volume']['Type']
+    machine_definitions['TagSpecifications'][0]['Tags'] = Tags
 
     print('starting %d %s' % (int(cfg['instance']['MaxCount']), path_to_instance))
     instances = ec2.create_instances(**machine_definitions)
@@ -266,11 +286,11 @@ def launch_instances(path_to_instance, path_to_file):
     # waiter for status running on each instances
     waiter = client.get_waiter('instance_running')
     waiter.wait(
-        InstanceIds=ids
+        instance_ids=ids
     )
     # write ids on file
-    myfile = Path('instances_ids')
-    if myfile.is_file():
+    my_file = Path('instances_ids')
+    if my_file.is_file():
         os.remove('instances_ids')
     with open('instances_ids', 'w') as id_file:
         for id in ids:
@@ -292,11 +312,11 @@ def start_instances(ids, n_attempts=2):
         try:
             status = True
             response = client.start_instances(
-                InstanceIds=ids
+                instance_ids=ids
             )
             waiter = client.get_waiter('instance_running')
             waiter.wait(
-                InstanceIds=ids
+                instance_ids=ids
             )
             print('instances running')
             break
@@ -318,11 +338,11 @@ def stop_instances(ids, n_attempts=2):
         try:
             status = True
             response = client.stop_instances(
-                InstanceIds=ids
+                instance_ids=ids
             )
             waiter = client.get_waiter('instance_stopped')
             waiter.wait(
-                InstanceIds=ids
+                instance_ids=ids
             )
             print('instances stopped')
             break
@@ -345,11 +365,11 @@ def terminate_instances(ids, n_attempts=2):
         try:
             status = True
             response = client.terminate_instances(
-                InstanceIds=ids
+                instance_ids=ids
             )
             waiter = client.get_waiter('instance_terminated')
             waiter.wait(
-                InstanceIds=ids
+                instance_ids=ids
             )
             print('instances terminated')
             break
@@ -374,64 +394,56 @@ def validateTemplate(TemplateBody):
     print('Validating template.')
     # log.debug('Template: ' + str(TemplateBody))
     with open(TemplateBody, 'r') as f:
-        response = client.validate_template(TemplateBody=f.read())
+        try:
+            response = client.validate_template(TemplateBody=f.read())
+        except Exception as e:
+            print(e)
+            exit()
 
 
-def readConfigFile(configFile):
+def cloudformation_read_cfg(configFile):
     config = configparser.ConfigParser()
     config.read(configFile)
 
     print('Reading configure file.')
     # log.debug('File: ' + str(configFile))
 
-    if 'Template' not in config['cloudformation']:
+    if 'Template'   not in config['cloudformation']:
         print("You must specify a template")
         return False, {}
-
-    if 'StackName' not in config['cloudformation']:
+    if 'StackName'  not in config['cloudformation']:
         print("You must specify a stack name")
         return False, {}
-
-    if 'Owner' not in config['user']:
+    if 'Owner'      not in config['user']:
         print("Must specify an owner")
         return False, {}
-
-    if 'KeyName' not in config['user']:
+    if 'KeyName'    not in config['user']:
         print("Must specify a keypair")
         return False, {}
-
-
-    if 'CustomAMI' not in config['aws']:
+    if 'CustomAMI'  not in config['aws']:
         print("You must specify an IMAGE")
         return False, {}
 
     if 'MasterInstanceType' not in config['aws']:
         config['aws']['MasterInstanceType'] = 'c5.large'
-  # log.debug('Master Instance Type: ' + config['aws']['MasterInstanceType'])
 
     if 'ComputeInstanceType' not in config['aws']:
         config['aws']['ComputeInstanceType'] = 'c5.large'
-  # log.debug('Compute Instance Type: ' + config['aws']['ComputeInstanceType'])
 
     if 'AvailabilityZone' not in config['aws']:
         config['aws']['AvailabilityZone'] = 'us-east-1a'
-  # log.debug('Availability Zone: ' + config['aws']['AvailabilityZone'])
 
     if 'VPCID' not in config['aws']:
         config['aws']['VPCID'] = 'NONE'
-  # log.debug('VPC Id: ' + config['aws']['VPCID'])
 
     if 'SubnetID' not in config['aws']:
         config['aws']['SubnetID'] = 'NONE'
-  # log.debug('Subnet: ' + config['aws']['SubnetID'])
 
     if 'InternetGatewayID' not in config['aws']:
         config['aws']['InternetGatewayID'] = 'NONE'
-  # log.debug('Internet Gateway Id: ' + config['aws']['InternetGatewayID'])
 
     if 'SecurityGroupID' not in config['aws']:
         config['aws']['SecurityGroupID'] = 'NONE'
-  # log.debug('Security Group: ' + config['aws']['SecurityGroupID'])
 
     print('Configure file read!')
     return True, config
@@ -442,7 +454,7 @@ def createCloudEnviroment(configFile):
 
     print('Initializing...')
 
-    response, config = readConfigFile(configFile)
+    response, config = read_cfg_cloudformation(configFile)
     if response:
         validateTemplate(basedir + "/templates/" + config['cloudformation']['Template'])
         print('Creating Stack')
@@ -525,7 +537,7 @@ def listInstances(instance_id):
     ec2 = boto3.resource('ec2')
 
     return list(ec2.instances.filter(
-        InstanceIds=[instance_id]
+        instance_ids=[instance_id]
     ))
 
 # *********************************************************
@@ -547,7 +559,7 @@ def getVolume(owner, name):
 # *********************************************************
 
 
-def createVolume(owner, name, AZ='us-east-1a', snap="snap-145ee46b"):
+def createVolume(name, AZ='us-east-1a', snap="snap-145ee46b"):
     client = boto3.client('ec2')
 
     response = client.create_volume(
@@ -578,110 +590,52 @@ def createVolume(owner, name, AZ='us-east-1a', snap="snap-145ee46b"):
 # Manage EC2 instances
 # *********************************************************
 
-# Start Instance
-
-
-def startInstance(instance_id):
-    client = boto3.client('ec2')
-    ec2 = boto3.resource('ec2')
-
-    instance = ec2.Instance(instance_id)
-
-    if instance.state["Name"] == "stopped":
-        response = instance.start()
-
-        waiter = client.get_waiter('instance_running')
-        waiter.wait(
-            InstanceIds=[instance.id]
-        )
-        print("intances are running")
-    return instance
-
-# Stop Instance
-
-
-def stopInstance(instance_id):
-    client = boto3.client('ec2')
-    ec2 = boto3.resource('ec2')
-
-    instance = ec2.Instance(instance_id)
-    if instance.state["Name"] == "running":
-        response = instance.stop()
-
-        waiter = client.get_waiter('instance_stopped')
-        waiter.wait(
-            InstanceIds=[instance.id]
-        )
-        print("intances are stopped")
-        return True
-    return False
-
 # Attach Volume to instance
 
 
-def attachVolume(instance_id, volume_id):
+def attach_volume(instance_id, volume_id, n_attempts=3):
     client = boto3.client('ec2')
     ec2 = boto3.resource('ec2')
 
     volume = ec2.Volume(volume_id)
     if volume.state == "available":
-        response = volume.attach_to_instance(
-            Device='/dev/sdh',
-            InstanceId=instance_id,
-            )
+        for attempt in n_attempts:
+            try:
+                response = volume.attach_to_instance(
+                    Device='/dev/sdh',
+                    instance_id=instance_id,
+                    )
+                break
+            except Exception as e:
+                print(e)
+                print('error to attach volume to instance, trying again')
+                continue
+
         waiter = client.get_waiter('volume_in_use')
         waiter.wait(
             VolumeIds=[volume.id]
         )
         return ec2.Volume(volume_id)
     elif volume.state == "in-use":
-        if volume.attachments[0]['InstanceId'] == instance_id:
+        if volume.attachments[0]['instance_id'] == instance_id:
             return ec2.Volume(volume_id)
     return None
 
 # Dettache volume from instance
 
 
-def dettachVolume(instance_id, volume_id):
+def dettach_volume(instance_id, volume_id):
     client = boto3.client('ec2')
     ec2 = boto3.resource('ec2')
 
     volume = ec2.Volume(volume_id)
     if volume.state == 'in-use':
         response = volume.detach_from_instance(
-            InstanceId=instance_id,
+            instance_id=instance_id,
             )
         waiter = client.get_waiter('volume_available')
         waiter.wait(
             VolumeIds=[volume.id]
         )
         return True
-    return False
-
-# *********************************************************
-# Prepare enviroment
-# *********************************************************
-
-
-def startVisualization(instance_id, volume_id, pem_key):
-    instance = startInstance(instance_id)
-    print(instance)
-    if instance:
-        if attachVolume(instance_id, volume_id):
-            os.system('ssh -i "%s" ubuntu@%s mkdir /home/ubuntu/shared' % (pem_key, instance.public_ip_address))
-            os.system('ssh -i "%s" ubuntu@%s sudo mount /dev/nvme1n1 /home/ubuntu/shared' % (pem_key, instance.public_ip_address))
-
-            print("Instance %s is running and mounted to volume %s." % (instance_id, volume_id))
-            print("Connect to instance with the following IP:")
-            print("%s" % instance.public_ip_address)
-        else:
-            print("Volume is already attached to some instance")
-
-
-def stopVisualization(instance_id, volume_id):
-    if dettachVolume(instance_id=instance_id, volume_id=volume_id):
-        print("Volume dettached")
-        if stopInstance(instance_id=instance_id):
-            print("Instance stopped")
-            return True
     return False

@@ -9,12 +9,23 @@ from pathlib import Path
 import math
 import threading
 
+
+# Send and receive files
+# start and stop instances
+# launch instances
+# create cluster via cloudformation
+# create volume
+# attach and dettach volume
+
+
+
 # *********************************************************
 # Broadcast
 # *********************************************************
 #
 # upload files to all VMs 
 # NOTE: It do NOT WORK with DIRECTORIES!!!!!
+
 
 
 def upload_files(instances_ids, path_to_key, paths_to_files, username='ubuntu', n_attempts=7):
@@ -259,7 +270,7 @@ def launch_instances(path_to_instance, path_to_file):
                     ]
                 )['Hosts']
                 if len(reserved_hosts) == 0:
-                    print('error: cannot found dedicated host')
+                    print('error: could not found dedicated host')
                     exit()
 
                 machine_definitions['Placement']['HostId'] = cfg['placement']['hostdID']
@@ -388,7 +399,7 @@ def terminate_instances(ids, n_attempts=2):
 # *****************************************************************************************
 
 
-def validateTemplate(TemplateBody):
+def cfn_validate_template(TemplateBody):
     client = boto3.client('cloudformation')
 
     print('Validating template.')
@@ -401,7 +412,7 @@ def validateTemplate(TemplateBody):
             exit()
 
 
-def cloudformation_read_cfg(configFile):
+def cfn_read_template(configFile):
     config = configparser.ConfigParser()
     config.read(configFile)
 
@@ -448,65 +459,66 @@ def cloudformation_read_cfg(configFile):
     print('Configure file read!')
     return True, config
 
-def createCloudEnviroment(configFile):
+
+def cfn_create_cluster(configFile):
     client = boto3.client('cloudformation')
     cloudformation = boto3.resource('cloudformation')
 
     print('Initializing...')
 
-    response, config = read_cfg_cloudformation(configFile)
+    response, config = cfn_read_template(configFile)
     if response:
-        validateTemplate(basedir + "/templates/" + config['cloudformation']['Template'])
+        cfn_validate_template("./templates/" + config['cloudformation']['Template'])
         print('Creating Stack')
-        with open(basedir + "/templates/" + config['cloudformation']['template'], 'r') as template:
+        with open("./templates/" + config['cloudformation']['template'], 'r') as template:
 
             stack = cloudformation.create_stack(
                 StackName=config['cloudformation']['stackName'],
                 TemplateBody=template.read(),
                 Parameters=[
                     {
-                    'ParameterKey': 'KeyName',
-                    'ParameterValue': config['user']['KeyName']
+                        'ParameterKey': 'KeyName',
+                        'ParameterValue': config['user']['KeyName']
                     },
                     {
-                    'ParameterKey': 'Owner',
-                    'ParameterValue': config['user']['Owner']
+                        'ParameterKey': 'Owner',
+                        'ParameterValue': config['user']['Owner']
                     },
                     {
-                    'ParameterKey': 'MasterInstanceType',
-                    'ParameterValue': config['aws']['MasterInstanceType']
+                        'ParameterKey': 'MasterInstanceType',
+                        'ParameterValue': config['aws']['MasterInstanceType']
                     },
                     {
-                    'ParameterKey': 'ComputeInstanceType',
-                    'ParameterValue': config['aws']['ComputeInstanceType']
+                        'ParameterKey': 'ComputeInstanceType',
+                        'ParameterValue': config['aws']['ComputeInstanceType']
                     },
                     {
-                    'ParameterKey': 'CustomAMI',
-                    'ParameterValue': config['aws']['CustomAMI']
+                        'ParameterKey': 'CustomAMI',
+                        'ParameterValue': config['aws']['CustomAMI']
                     },
                     {
-                    'ParameterKey': 'AvailabilityZone',
-                    'ParameterValue': config['aws']['AvailabilityZone']
+                        'ParameterKey': 'AvailabilityZone',
+                        'ParameterValue': config['aws']['AvailabilityZone']
                     },
                     {
-                    'ParameterKey' : 'SubnetID',
-                    'ParameterValue': config['aws']['SubnetID']
+                        'ParameterKey' : 'SubnetID',
+                        'ParameterValue': config['aws']['SubnetID']
                     },
                     {
-                    'ParameterKey': 'VPCID',
-                    'ParameterValue': config['aws']['VPCID']
+                        'ParameterKey': 'VPCID',
+                        'ParameterValue': config['aws']['VPCID']
                     },
                     {
-                    'ParameterKey': 'InternetGatewayID',
-                    'ParameterValue': config['aws']['InternetGatewayID']
+                        'ParameterKey': 'InternetGatewayID',
+                        'ParameterValue': config['aws']['InternetGatewayID']
                     },
                     {
-                    'ParameterKey': 'SecurityGroupID',
-                    'ParameterValue': config['aws']['SecurityGroupID']
+                        'ParameterKey': 'SecurityGroupID',
+                        'ParameterValue': config['aws']['SecurityGroupID']
                     }
                 ]
             )
-          # log.debug('Stack launched, waiting to complete...')
+
             waiter = client.get_waiter('stack_create_complete')
             waiter.wait(
                 StackName=config['cloudformation']['StackName']
@@ -550,7 +562,7 @@ def getVolume(owner, name):
 
     return list(ec2.volumes.filter(
         Filters=[
-            {'Name': 'tag:Owner', 'Values': [owner]},
+            {'Name': 'tag:owner', 'Values': [owner]},
             {'Name': 'tag:Name', 'Values': [name]}
             ]))
 
@@ -559,32 +571,40 @@ def getVolume(owner, name):
 # *********************************************************
 
 
-def createVolume(name, AZ='us-east-1a', snap="snap-145ee46b"):
+def create_volume(volume_name, AZ='us-east-1a', size=20, snap='', volume_type='gp2'):
     client = boto3.client('ec2')
+    iam = boto3.resource('iam')
+    current_user = iam.CurrentUser()
 
-    response = client.create_volume(
-        AvailabilityZone=AZ,
-        Encrypted=False,
-        Size=500,
-        SnapshotId=snap,
-        VolumeType='st1',
-        TagSpecifications=[
-            {
-                'ResourceType': 'volume',
-                'Tags': [
-                    {
-                        'Key': 'Name',
-                        'Value': name
-                    },
-                    {
-                        'Key': 'Owner',
-                        'Value': owner
-                    }
-                ]
-            },
-        ]
-    )
-    return response['VolumeId']
+    volume_id = None
+    try:
+        response = client.create_volume(
+            AvailabilityZone=AZ,
+            Encrypted=False,
+            Size=size,
+            SnapshotId=snap,
+            VolumeType=volume_type,
+            TagSpecifications=[
+                {
+                    'ResourceType': 'volume',
+                    'Tags': [
+                        {
+                            'Key': 'Name',
+                            'Value': volume_name
+                        },
+                        {
+                            'Key': 'owner',
+                            'Value': current_user.user_name
+                        }
+                    ]
+                },
+            ]
+        )
+        volume_id = response['VolumeId']
+    except Exception as e:
+        print(e)
+        exit()
+    return volume_id
 
 # *********************************************************
 # Manage EC2 instances
@@ -598,30 +618,35 @@ def attach_volume(instance_id, volume_id, n_attempts=3):
     ec2 = boto3.resource('ec2')
 
     volume = ec2.Volume(volume_id)
+
+    attached = False
     if volume.state == "available":
-        for attempt in n_attempts:
+        for attempt in range(n_attempts):
             try:
                 response = volume.attach_to_instance(
                     Device='/dev/sdh',
-                    instance_id=instance_id,
+                    InstanceId=instance_id,
                     )
+
+                waiter = client.get_waiter('volume_in_use')
+                waiter.wait(
+                    VolumeIds=[volume.id]
+                )
+                attached = True
                 break
             except Exception as e:
                 print(e)
                 print('error to attach volume to instance, trying again')
                 continue
-
-        waiter = client.get_waiter('volume_in_use')
-        waiter.wait(
-            VolumeIds=[volume.id]
-        )
-        return ec2.Volume(volume_id)
     elif volume.state == "in-use":
         if volume.attachments[0]['instance_id'] == instance_id:
-            return ec2.Volume(volume_id)
-    return None
+            attached = True
+        else:
+            print('error Volume attached in another instance')
 
-# Dettache volume from instance
+    return attached
+
+# Dettach volume from instance
 
 
 def dettach_volume(instance_id, volume_id):

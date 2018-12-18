@@ -82,19 +82,19 @@ def main():
 
     # necessary files to run mpi applications
     files = [
-        'hosts',
-        'hostname',
-        'public_ip',
-        'private_ip',
-        'instances_ids',
-        'firstscript.sh',
-        'ping.sh',
-        'copy_all.sh',
-        'disable_hyperthreading.sh',
-        'run_all.sh',
+        {'hosts': '~/hosts'},
+        {'hostname': '~/hostname'},
+        {'public_ip': ' ~/public_ip'},
+        {'private_ip': '~/private_ip'},
+        {'instances_ids': '~/instances_ids'},
+        {'firstscript.sh': '~/firstscript.sh'},
+        {'ping.sh': '~/ping.sh'},
+        {'copy_all.sh': '~/copy_all.sh'},
+        {'disable_hyperthreading.sh': '~/disable_hyperthreading.sh'},
+        {'run_all.sh': '~/run_all.sh'},
         ]
     # aws.uploadFiles(ids, path_to_key, files, 'ubuntu')
-    aws.transferParallel(ids, path_to_key, files)
+    aws.transfer_parallel(ids, path_to_key, files)
     # necessary commands to to run mpi applications
     commands = [
         'echo 0 | sudo tee cat /proc/sys/kernel/yama/ptrace_scope',
@@ -107,12 +107,12 @@ def main():
         'sudo ./disable_hyperthreading.sh',
         ]
     # aws.executeCommands(ids, path_to_key, commands)
-    aws.executeParallel(ids, path_to_key, commands)
+    aws.execute_parallel(ids, path_to_key, commands)
 
     commands = ['./firstscript.sh']
-    aws.executeCommands(ids[:1], path_to_key, commands)
+    aws.execute_commands(ids[:1], path_to_key, commands)
 
-    os.system('scp -qr -i willkey ../fwi_src ubuntu@$(cat public_ip | head -n 1):')
+    os.system('scp -qr -i 'willkey.pem' ../fwi_src ubuntu@$(cat public_ip | head -n 1):')
     # n_iterations = 1
     # print('running fwi with %d processes' % total_cores)
     # commands = ['./run_fwi.sh ' + str(total_cores) + ' ' + str(n_iterations)]

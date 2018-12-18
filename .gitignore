@@ -9,3 +9,5 @@ hostnames
 hosts
 public_ip
 private_ip
+venv
+src/__pycache__

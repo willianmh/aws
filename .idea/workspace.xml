@@ -5,26 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8c09af6d-9211-47bc-90b7-ae3a734ab716" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.run_all.sh.old" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.model.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.model.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/copy_all.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/disable_hyperthreading.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/firstscript.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ping.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_all.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_fwi_m.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_fwi_toydac.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/firstscript.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/firstscript.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/get_pings.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/get_pings.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/install-mpich.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/run_fwi.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/run_fwi_m.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/run_fwi_m.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/awsFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/awsFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/times.out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/times_simple.out" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -53,8 +34,8 @@
               <entry file="file://$PROJECT_DIR$/README.md">
                 <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
                   <state split_layout="SPLIT">
-                    <first_editor relative-caret-position="548">
-                      <caret line="137" lean-forward="true" selection-start-line="137" selection-end-line="137" />
+                    <first_editor relative-caret-position="649">
+                      <caret line="158" column="75" selection-start-line="158" selection-start-column="75" selection-end-line="158" selection-end-column="75" />
                     </first_editor>
                     <second_editor />
                   </state>
@@ -267,12 +248,12 @@
       <workItem from="1544850022398" duration="43000" />
       <workItem from="1544850097665" duration="175000" />
       <workItem from="1544972671289" duration="7247000" />
-      <workItem from="1545161746707" duration="2905000" />
+      <workItem from="1545161746707" duration="3440000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="31644000" />
+    <option name="totallyTimeSpent" value="32179000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1080" extended-state="6" />
@@ -529,8 +510,8 @@
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
-          <first_editor relative-caret-position="548">
-            <caret line="137" lean-forward="true" selection-start-line="137" selection-end-line="137" />
+          <first_editor relative-caret-position="649">
+            <caret line="158" column="75" selection-start-line="158" selection-start-column="75" selection-end-line="158" selection-end-column="75" />
           </first_editor>
           <second_editor />
         </state>

@@ -156,7 +156,7 @@ Example:
 python3 terminate.py 'instances_ids'
 ```
 
-Note: if you not define a file, it will search for the file instances_ids.
+Note: if you not define a file, it will search for the file _instances_ids_.
 
 ## Built With
 

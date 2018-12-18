@@ -6,7 +6,7 @@ sudo apt-get install -y htop vim tmux tree zsh git
 sudo apt-get install -y gcc g++ gfortran build-essential
 sudo apt-get install -y libtool m4 automake
 sudo apt-get install -y grads
-sudo apt-get install libz-dev
+sudo apt-get install -y libz-dev
 
 if [ ! -f ~/mpich-3.2.1.tar.gz ]
 then

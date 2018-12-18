@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This script get pings files from all instances, after executed pings.sh and put in $DIR
+# It should be executed in local, or a host that you will collect and post process data
+
+
 DIR=$1
 
 for i in $(cat public_ip)

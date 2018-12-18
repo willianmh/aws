@@ -64,10 +64,11 @@ def main():
     path_to_instance = sys.argv[1]
     path_to_configure = sys.argv[2]
     path_to_key = sys.argv[3]
+
     # path_to_instance = 'instances/c5.xlarge.json'
     print('starting program')
     instances, ids = aws.launch_instances(path_to_instance, path_to_configure)
-    time.sleep(2)
+    time.sleep(1)
 
     cores = instances[0].cpu_options['CoreCount'] * instances[0].cpu_options['ThreadsPerCore']
     total_cores = len(ids) * cores
@@ -82,16 +83,16 @@ def main():
 
     # necessary files to run mpi applications
     files = [
-        {'hosts': '~/hosts'},
-        {'hostname': '~/hostname'},
-        {'public_ip': ' ~/public_ip'},
-        {'private_ip': '~/private_ip'},
-        {'instances_ids': '~/instances_ids'},
-        {'firstscript.sh': '~/firstscript.sh'},
-        {'ping.sh': '~/ping.sh'},
-        {'copy_all.sh': '~/copy_all.sh'},
-        {'disable_hyperthreading.sh': '~/disable_hyperthreading.sh'},
-        {'run_all.sh': '~/run_all.sh'},
+        {'hosts':                       '~/hosts'},
+        {'hostname':                    '~/hostname'},
+        {'public_ip':                   ' ~/public_ip'},
+        {'private_ip':                  '~/private_ip'},
+        {'instances_ids':               '~/instances_ids'},
+        {'firstscript.sh':              '~/firstscript.sh'},
+        {'ping.sh':                     '~/ping.sh'},
+        {'copy_all.sh':                 '~/copy_all.sh'},
+        {'disable_hyperthreading.sh':   '~/disable_hyperthreading.sh'},
+        {'run_all.sh':                  '~/run_all.sh'},
         ]
     # aws.uploadFiles(ids, path_to_key, files, 'ubuntu')
     aws.transfer_parallel(ids, path_to_key, files)
@@ -112,7 +113,7 @@ def main():
     commands = ['./firstscript.sh']
     aws.execute_commands(ids[:1], path_to_key, commands)
 
-    os.system('scp -qr -i 'willkey.pem' ../fwi_src ubuntu@$(cat public_ip | head -n 1):')
+    os.system('scp -qr -i "willkey.pem" ../fwi_src ubuntu@$(cat public_ip | head -n 1):')
     # n_iterations = 1
     # print('running fwi with %d processes' % total_cores)
     # commands = ['./run_fwi.sh ' + str(total_cores) + ' ' + str(n_iterations)]

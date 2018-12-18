@@ -1,6 +1,11 @@
 #!/bin/bash
 
+# This script runs TOY2DAC FWI.
+# It contains a loop that iterate under values of MPI process (N_MPI) and OMP threads (N_OMP)
+# Tha maximum value of N_MPI * N_OMP =  CORES_IN_MACHINE
+
 N_ITERATIONS=$1
+CORES_IN_MACHINE=48
 
 source /opt/intel/compilers_and_libraries_2018.3.222/linux/bin/compilervars.sh -arch intel64 -platform linux
 source /opt/intel/parallel_studio_xe_2018.3.051/bin/psxevars.sh
@@ -17,7 +22,7 @@ source /opt/intel/parallel_studio_xe_2018.3.051/bin/psxevars.sh
 for i in 1 2 4 6 8 12 24 48
 do
   N_MPI=${i}
-  N_OMP=$((48/${i}))
+  N_OMP=$((${CORES_IN_MACHINE}/${i}))
   echo "running case: ${N_MPI} mpi and ${N_OMP} openmp"
   for j in `seq 1 ${N_ITERATIONS}`
   do

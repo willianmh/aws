@@ -97,24 +97,26 @@ You need to define a list with the paths to the files and the IDs of the instanc
 
 ```python
 username = "ubuntu" # AWS use it by default on ubuntu VMs
-files = ['file_1', '../file_2', 'file_3']
+files = [
+    {'local_path/file_1': 'remote_path/file_1'}, 
+    {'local_path/file_2': 'remote_path/file_2'}, 
+    {'local_path/file_3': 'remote_path/file_3'}
+    ]
 aws.uploadFiles(ids, path_to_key, files, username, n_attempts)
 ```
 
 It works like a broadcast.
-Copy the same files to all remotes on "~/".
 
 Sometimes, AWS say that our instances are running but the ssh service is not already available, so we can define a n_attempts to try many times.
 
 #### Download
 
-To simplicity, you can download one file per VM on each function call.
+You can just download one file per VM on each function call.
 
 ```python
 remote_path = '/home/ubuntu/file.out'
 local_path = result_dir + '/file.out'
 aws.downloadFile(id, path_to_key, remote_path, local_path, username)
-
 ```
 
 ### Executing commands on remote
@@ -128,6 +130,7 @@ aws.executeCommands(ids, path_to_key, commands)
 ```
 
 Again, it will execute the same commands to all machines.
+You are allowed to execute with sudo.
 
 ### Connecting to remote
 

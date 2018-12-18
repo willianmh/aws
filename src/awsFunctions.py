@@ -18,14 +18,12 @@ import threading
 # attach and dettach volume
 
 
-
 # *********************************************************
 # Broadcast
 # *********************************************************
 #
 # upload files to all VMs 
 # NOTE: It do NOT WORK with DIRECTORIES!!!!!
-
 
 
 def upload_files(instances_ids, path_to_key, paths_to_files, username='ubuntu', n_attempts=7):

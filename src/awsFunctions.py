@@ -248,23 +248,23 @@ def launch_instances(path_to_instance, path_to_file):
 
     # Configure Placement
     if 'PlacementType' in cfg['instance']:
-        if cfg['instance']['placement'] == 'placement':  # Configure Placement Group
-            not_exist = check_placement_group(cfg['placement']['name'])  # Check if placement already exists
+        if cfg['instance']['PlacementType'] == 'placement':  # Configure Placement Group
+            not_exist = check_placement_group(cfg['placement']['Name'])  # Check if placement already exists
             if not_exist:
-                print('creating placement_group: %s' % cfg['placement']['name'])
+                print('creating placement_group: %s' % cfg['placement']['Name'])
                 response = client.create_placement_group(
-                    GroupName=cfg['placement']['name'],
-                    Strategy=cfg['placement']['strategy']
+                    GroupName=cfg['placement']['Name'],
+                    Strategy=cfg['placement']['Strategy']
                 )
-            machine_definitions['Placement']['GroupName'] = cfg['placement']['name']
+            machine_definitions['Placement']['GroupName'] = cfg['placement']['Name']
 
-        elif cfg['instance']['placement'] == 'tenancy':  # Configure Tenancy
-            machine_definitions['Placement']['Tenancy'] = cfg['tenancy']['type']
+        elif cfg['instance']['PlacementType'] == 'tenancy':  # Configure Tenancy
+            machine_definitions['Placement']['Tenancy'] = cfg['tenancy']['Type']
 
-            if cfg['placement']['type'] == 'host':
+            if cfg['placement']['Type'] == 'host':
                 reserved_hosts = client.describe_hosts(
                     HostIds=[
-                        cfg['placement']['hostdID']
+                        cfg['placement']['HostdID']
                     ]
                 )['Hosts']
                 if len(reserved_hosts) == 0:
@@ -282,7 +282,8 @@ def launch_instances(path_to_instance, path_to_file):
     machine_definitions['MaxCount'] = int(cfg['instance']['MaxCount'])
     machine_definitions['MinCount'] = int(cfg['instance']['MinCount'])
 
-    machine_definitions['BlockDeviceMappings'][0]['Ebs']['VolumeType'] = cfg['volume']['Type']
+    machine_definitions['BlockDeviceMappings'][0]['Ebs']['VolumeType'] = cfg['Volume']['Type']
+    machine_definitions['BlockDeviceMappings'][0]['Ebs']['VolumeSize'] = cfg['Volume']['Size']
     machine_definitions['TagSpecifications'][0]['Tags'] = Tags
 
     print('starting %d %s' % (int(cfg['instance']['MaxCount']), path_to_instance))

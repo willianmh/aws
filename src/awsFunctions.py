@@ -237,12 +237,14 @@ def launch_instances(path_to_instance, path_to_file):
     cfg = configparser.ConfigParser()
     cfg.read(path_to_file)
 
-    Tags =[{'owner': current_user.user_name}]
+    Tags =[{'Key': 'owner', 'Value': current_user.user_name}]
     for tag in cfg['tags']:
         if not tag == 'owner':
             Tags.append({
-                tag: cfg['tags'][tag]
+                'Key': tag,
+                'Value': cfg['tags'][tag]
             })
+    # print(Tags)
 
     machine_definitions = json.load(open(path_to_instance, 'r'))
 
@@ -283,7 +285,7 @@ def launch_instances(path_to_instance, path_to_file):
     machine_definitions['MinCount'] = int(cfg['instance']['MinCount'])
 
     machine_definitions['BlockDeviceMappings'][0]['Ebs']['VolumeType'] = cfg['Volume']['Type']
-    machine_definitions['BlockDeviceMappings'][0]['Ebs']['VolumeSize'] = cfg['Volume']['Size']
+    machine_definitions['BlockDeviceMappings'][0]['Ebs']['VolumeSize'] = int(cfg['Volume']['Size'])
     machine_definitions['TagSpecifications'][0]['Tags'] = Tags
 
     print('starting %d %s' % (int(cfg['instance']['MaxCount']), path_to_instance))
@@ -296,7 +298,7 @@ def launch_instances(path_to_instance, path_to_file):
     # waiter for status running on each instances
     waiter = client.get_waiter('instance_running')
     waiter.wait(
-        instance_ids=ids
+        instanceIds=ids
     )
     # write ids on file
     my_file = Path('instances_ids')

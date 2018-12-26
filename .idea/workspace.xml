@@ -5,8 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8c09af6d-9211-47bc-90b7-ae3a734ab716" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/config/instances_cfg.ini" beforeDir="false" afterPath="$PROJECT_DIR$/config/instances_cfg.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/awsFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/awsFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -18,7 +17,7 @@
     <splitter split-orientation="horizontal" split-proportion="0.5">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file pinned="false" current-in-tab="true">
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/src/awsFunctions.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="569">
@@ -42,7 +41,7 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/run.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="161">
+                <state relative-caret-position="1472">
                   <caret line="69" column="41" selection-start-line="69" selection-start-column="25" selection-end-line="69" selection-end-column="41" />
                   <folding>
                     <element signature="e#0#12#0" expanded="true" />
@@ -60,6 +59,15 @@
               </provider>
             </entry>
           </file>
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/scripts/firstscript.sh">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="667">
+                  <caret line="29" column="10" selection-start-line="29" selection-start-column="2" selection-end-line="29" selection-end-column="10" />
+                </state>
+              </provider>
+            </entry>
+          </file>
         </leaf>
       </split-first>
       <split-second>
@@ -70,7 +78,7 @@
                 <entry file="file://$PROJECT_DIR$/config/instances_cfg.ini">
                   <provider selected="true" editor-type-id="text-editor">
                     <state relative-caret-position="138">
-                      <caret line="6" column="12" lean-forward="true" selection-start-line="6" selection-start-column="12" selection-end-line="6" selection-end-column="12" />
+                      <caret line="6" column="12" selection-start-line="6" selection-start-column="12" selection-end-line="6" selection-end-column="12" />
                     </state>
                   </provider>
                 </entry>
@@ -91,7 +99,7 @@
               <file pinned="false" current-in-tab="true">
                 <entry file="file://$PROJECT_DIR$/instances/c5.2xlarge.json">
                   <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="-161">
+                    <state relative-caret-position="23">
                       <caret line="20" column="17" selection-start-line="20" selection-start-column="5" selection-end-line="20" selection-end-column="17" />
                     </state>
                   </provider>
@@ -160,7 +168,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -177,6 +184,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -223,17 +231,19 @@
       <workItem from="1545161746707" duration="3700000" />
       <workItem from="1545249824621" duration="752000" />
       <workItem from="1545256635146" duration="2145000" />
+      <workItem from="1545844775145" duration="12000" />
+      <workItem from="1545844810237" duration="368000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="35336000" />
+    <option name="totallyTimeSpent" value="35716000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1080" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.13553895" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.13874066" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -341,13 +351,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/firstscript.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1242">
-          <caret line="54" column="22" selection-start-line="54" selection-start-column="22" selection-end-line="54" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/run_fwi_m.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="575">
@@ -384,6 +387,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/awsFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="569">
+          <caret line="300" column="18" selection-start-line="300" selection-start-column="18" selection-end-line="300" selection-end-column="18" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/get_pings.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="299">
@@ -391,23 +404,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/config/configure_file_template.ini">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="184">
-          <caret line="8" selection-start-line="8" selection-end-line="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/instances/c5.2xlarge.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-161">
-          <caret line="20" column="17" selection-start-line="20" selection-start-column="5" selection-end-line="20" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/run.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="161">
+        <state relative-caret-position="1472">
           <caret line="69" column="41" selection-start-line="69" selection-start-column="25" selection-end-line="69" selection-end-column="41" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
@@ -425,17 +424,28 @@
     <entry file="file://$PROJECT_DIR$/config/instances_cfg.ini">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="138">
-          <caret line="6" column="12" lean-forward="true" selection-start-line="6" selection-start-column="12" selection-end-line="6" selection-end-column="12" />
+          <caret line="6" column="12" selection-start-line="6" selection-start-column="12" selection-end-line="6" selection-end-column="12" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/awsFunctions.py">
+    <entry file="file://$PROJECT_DIR$/config/configure_file_template.ini">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="569">
-          <caret line="300" column="18" selection-start-line="300" selection-start-column="18" selection-end-line="300" selection-end-column="18" />
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="184">
+          <caret line="8" selection-start-line="8" selection-end-line="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/instances/c5.2xlarge.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="23">
+          <caret line="20" column="17" selection-start-line="20" selection-start-column="5" selection-end-line="20" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/firstscript.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="667">
+          <caret line="29" column="10" selection-start-line="29" selection-start-column="2" selection-end-line="29" selection-end-column="10" />
         </state>
       </provider>
     </entry>

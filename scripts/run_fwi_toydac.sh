@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #source /opt/intel/compilers_and_libraries_2018.3.222/linux/bin/compilervars.sh -arch intel64 -platform linux
-source ~/.bashrc
+source /opt/intel/parallel_studio_xe_2019/bin/psxevars.sh
 
 N_ITERATIONS=3
 

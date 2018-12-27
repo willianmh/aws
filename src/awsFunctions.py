@@ -274,7 +274,7 @@ def launch_instances(path_to_instance, path_to_file):
                     print('error: could not found dedicated host')
                     exit()
 
-                machine_definitions['Placement']['HostId'] = cfg['placement']['HostID']
+                machine_definitions['Placement']['HostId'] = cfg['tenancy']['HostID']
                 machine_definitions['Placement']['Affinity'] = 'host'
 
     # Overwrite definitions with configure file

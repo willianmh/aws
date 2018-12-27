@@ -5,7 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8c09af6d-9211-47bc-90b7-ae3a734ab716" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/config/host.ini" beforeDir="false" afterPath="$PROJECT_DIR$/config/host.ini" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/awsFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/awsFunctions.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -34,7 +33,7 @@
             <entry file="file://$PROJECT_DIR$/src/awsFunctions.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="353">
-                  <caret line="276" column="46" selection-start-line="276" selection-start-column="37" selection-end-line="276" selection-end-column="46" />
+                  <caret line="276" column="73" selection-start-line="276" selection-start-column="73" selection-end-line="276" selection-end-column="73" />
                   <folding>
                     <element signature="e#0#12#0" expanded="true" />
                   </folding>
@@ -319,12 +318,12 @@
       <workItem from="1545249824621" duration="752000" />
       <workItem from="1545256635146" duration="2145000" />
       <workItem from="1545844775145" duration="12000" />
-      <workItem from="1545844810237" duration="20903000" />
+      <workItem from="1545844810237" duration="20944000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="56251000" />
+    <option name="totallyTimeSpent" value="56292000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1080" extended-state="6" />
@@ -603,7 +602,7 @@
     <entry file="file://$PROJECT_DIR$/src/awsFunctions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="353">
-          <caret line="276" column="46" selection-start-line="276" selection-start-column="37" selection-end-line="276" selection-end-column="46" />
+          <caret line="276" column="73" selection-start-line="276" selection-start-column="73" selection-end-line="276" selection-end-column="73" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>

@@ -13,7 +13,7 @@ do
 #    echo $PING_DIR
     BASE=$(ls ${PING_DIR} | tail -n 1)
 #    echo $BASE
-    rm IPS
+    rm -rf IPS
     ls ${PING_DIR}/$(sed 's/\_[^\_]*$//' <<< ${BASE} )* > IPS
     sed -i 's/^.*\_[^\_]/1/' IPS
 

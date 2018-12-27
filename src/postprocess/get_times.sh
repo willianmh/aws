@@ -19,11 +19,11 @@ then
   done
 fi
 done
-grep 'results_' $OUTPUT_FILE > $DIR/a
+grep 'results' $OUTPUT_FILE > $DIR/a
 grep 'Average' $OUTPUT_FILE > $DIR/b
 
 sed -i 's/|[^|]*$//;s/ //g;s/Average|//;s/[|].*$//g' $DIR/b
-paste -d, $DIR/a $DIR/b > $DIR/time_${i}.csv
+paste -d, $DIR/a $DIR/b > $DIR/time.csv
 
 
 

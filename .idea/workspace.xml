@@ -5,9 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8c09af6d-9211-47bc-90b7-ae3a734ab716" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/postprocess/get_times.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/postprocess/get_times.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/postprocess/pings.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/postprocess/pings.sh" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -60,8 +58,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/src/postprocess/get_times.sh">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="391">
-                  <caret line="17" column="6" selection-start-line="17" selection-start-column="6" selection-end-line="17" selection-end-column="6" />
+                <state relative-caret-position="483">
+                  <caret line="21" column="13" selection-start-line="21" selection-start-column="13" selection-end-line="21" selection-end-column="13" />
                 </state>
               </provider>
             </entry>
@@ -283,12 +281,12 @@
       <workItem from="1545249824621" duration="752000" />
       <workItem from="1545256635146" duration="2145000" />
       <workItem from="1545844775145" duration="12000" />
-      <workItem from="1545844810237" duration="23433000" />
+      <workItem from="1545844810237" duration="23568000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="58781000" />
+    <option name="totallyTimeSpent" value="58916000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1080" extended-state="6" />
@@ -586,8 +584,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/postprocess/get_times.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="391">
-          <caret line="17" column="6" selection-start-line="17" selection-start-column="6" selection-end-line="17" selection-end-column="6" />
+        <state relative-caret-position="483">
+          <caret line="21" column="13" selection-start-line="21" selection-start-column="13" selection-end-line="21" selection-end-column="13" />
         </state>
       </provider>
     </entry>

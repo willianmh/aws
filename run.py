@@ -145,9 +145,9 @@ def main():
         aws.download_file(ids[0], path_to_key, remote_path, local_path)
 
     os.system('mkdir -p %s' % result_dir+'/pings')
-    os.system('scripts/get_pings.sh %s' % result_dir+'/pings')
+    os.system('scripts/get_pings.sh %s %s' % (result_dir+'/public_ip', result_dir+'/pings'))
 
-    aws.terminate_instances(ids)
+    # aws.terminate_instances(ids)
     # time.sleep(20)
 
 

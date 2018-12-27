@@ -42,11 +42,6 @@ for i in `seq 1 ${N_ITERATIONS}`
 do
   cd ~/run_marmousi_template
   echo "inversion"
-  mpirun -n 8 \
-        -ppn 2 \
-        -genv OMP_NUM_THREADS=4 \
-        -genv I_MPI_PIN_DOMAIN=omp \
-        -f hostfile \
-        ../toy2dac/bin/toy2dac >> ~/inversion_${i}.out
+  mpirun -n 8 -ppn 2 -genv OMP_NUM_THREADS=4 -genv I_MPI_PIN_DOMAIN=omp -f hostfile ../toy2dac/bin/toy2dac >> ~/inversion_${i}.out
   sleep 1
 done

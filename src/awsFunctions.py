@@ -267,14 +267,14 @@ def launch_instances(path_to_instance, path_to_file):
             if cfg['tenancy']['Type'] == 'host':
                 reserved_hosts = client.describe_hosts(
                     HostIds=[
-                        cfg['placement']['HostdID']
+                        cfg['placement']['HostID']
                     ]
                 )['Hosts']
                 if len(reserved_hosts) == 0:
                     print('error: could not found dedicated host')
                     exit()
 
-                machine_definitions['Placement']['HostId'] = cfg['placement']['hostdID']
+                machine_definitions['Placement']['HostId'] = cfg['placement']['HostID']
                 machine_definitions['Placement']['Affinity'] = 'host'
 
     # Overwrite definitions with configure file

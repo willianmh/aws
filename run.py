@@ -79,9 +79,9 @@ def main():
         for id in ids:
             id_file.write(str(id) + '\n')
 
-    cores = instances[0].cpu_options['CoreCount'] * instances[0].cpu_options['ThreadsPerCore']
-    total_cores = len(ids) * cores
-    print('total cores: %d' % total_cores)
+    # cores = instances[0].cpu_options['CoreCount'] * instances[0].cpu_options['ThreadsPerCore']
+    # total_cores = len(ids) * cores
+    # print('total cores: %d' % total_cores)
 
     # create 4 files and configure a host alias
     # - hostname:       all hostames
@@ -120,17 +120,14 @@ def main():
     # aws.executeCommands(ids, path_to_key, commands)
     aws.execute_parallel(ids, path_to_key, commands)
 
-    commands = [
-        './firstscript.sh',
-    ]
+    commands = ['./firstscript.sh']
     aws.execute_commands(ids[:1], path_to_key, commands)
 
-    # POST PROCESS - depends on your application
-    print('running fwi with %d processes' % total_cores)
     commands = ['./run_fwi_toydac.sh 2>&1 | tee log_fwi.out']
     status, stdout, stderr = aws.execute_commands(ids[:1], path_to_key, commands)
 
-    with open('test.log', 'w') as filelog:
+    # POST PROCESS - depends on your application
+    with open(dir + '/test.log', 'w') as filelog:
         for line in stdout:
             filelog.write(str(line))
 
@@ -147,8 +144,8 @@ def main():
     os.system('mkdir -p %s' % result_dir+'/pings')
     os.system('scripts/get_pings.sh %s %s' % (dir +'/public_ip', result_dir+'/pings'))
 
-    aws.stop_instances(ids)
-    # aws.terminate_instances(ids)
+    # aws.stop_instances(ids)
+    aws.terminate_instances(ids)
     # time.sleep(20)
 
 

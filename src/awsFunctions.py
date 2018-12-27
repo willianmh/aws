@@ -317,11 +317,11 @@ def start_instances(ids, n_attempts=2):
         try:
             status = True
             response = client.start_instances(
-                instance_ids=ids
+                InstanceIds=ids
             )
             waiter = client.get_waiter('instance_running')
             waiter.wait(
-                instance_ids=ids
+                InstanceIds=ids
             )
             print('instances running')
             break

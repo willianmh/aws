@@ -5,7 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8c09af6d-9211-47bc-90b7-ae3a734ab716" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/awsFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/awsFunctions.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -18,7 +17,7 @@
     <splitter split-orientation="horizontal" split-proportion="0.5">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file pinned="false" current-in-tab="true">
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/run.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="650">
@@ -30,11 +29,11 @@
               </provider>
             </entry>
           </file>
-          <file pinned="false" current-in-tab="false">
+          <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/src/awsFunctions.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="464">
-                  <caret line="154" column="29" lean-forward="true" selection-start-line="154" selection-start-column="29" selection-end-line="154" selection-end-column="29" />
+                <state relative-caret-position="694">
+                  <caret line="323" column="17" selection-start-line="323" selection-start-column="17" selection-end-line="323" selection-end-column="17" />
                   <folding>
                     <element signature="e#0#12#0" expanded="true" />
                   </folding>
@@ -229,8 +228,8 @@
         <option value="$PROJECT_DIR$/scripts/get_pings.sh" />
         <option value="$PROJECT_DIR$/scripts/run_fwi_toydac.sh" />
         <option value="$PROJECT_DIR$/instances/c5n.2xlarge.json" />
-        <option value="$PROJECT_DIR$/src/awsFunctions.py" />
         <option value="$PROJECT_DIR$/run.py" />
+        <option value="$PROJECT_DIR$/src/awsFunctions.py" />
       </list>
     </option>
   </component>
@@ -309,12 +308,12 @@
       <workItem from="1545249824621" duration="752000" />
       <workItem from="1545256635146" duration="2145000" />
       <workItem from="1545844775145" duration="12000" />
-      <workItem from="1545844810237" duration="16572000" />
+      <workItem from="1545844810237" duration="16943000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="51920000" />
+    <option name="totallyTimeSpent" value="52291000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1080" extended-state="6" />
@@ -580,20 +579,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/awsFunctions.py">
+    <entry file="file://$PROJECT_DIR$/run.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="464">
-          <caret line="154" column="29" lean-forward="true" selection-start-line="154" selection-start-column="29" selection-end-line="154" selection-end-column="29" />
+        <state relative-caret-position="650">
+          <caret line="129" column="59" selection-start-line="129" selection-start-column="59" selection-end-line="129" selection-end-column="59" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/run.py">
+    <entry file="file://$PROJECT_DIR$/src/awsFunctions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="650">
-          <caret line="129" column="59" selection-start-line="129" selection-start-column="59" selection-end-line="129" selection-end-column="59" />
+        <state relative-caret-position="694">
+          <caret line="323" column="17" selection-start-line="323" selection-start-column="17" selection-end-line="323" selection-end-column="17" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>

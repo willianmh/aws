@@ -145,7 +145,7 @@ def main():
     os.system('scripts/get_pings.sh %s %s' % (dir +'/public_ip', result_dir+'/pings'))
 
     # aws.stop_instances(ids)
-    aws.terminate_instances(ids)
+    # aws.terminate_instances(ids)
     # time.sleep(20)
 
 

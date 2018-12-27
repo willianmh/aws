@@ -6,7 +6,7 @@ import time
 import sys
 
 
-def getHosts(ids):
+def getHosts(ids, prefix='.'):
     """
     param ids: list of instances ids
     """
@@ -16,26 +16,26 @@ def getHosts(ids):
     hostnames = []
 
     # remove existing files
-    myfile = Path('public_ip')
-    if myfile.is_file():
-        os.remove('public_ip')
+    if Path(prefix + '/public_ip').is_file():
+        os.remove(prefix + '/public_ip')
 
-    myfile = Path('private_ip')
-    if myfile.is_file():
-        os.remove('private_ip')
+    if Path(prefix + '/private_ip').is_file():
+        os.remove(prefix + '/private_ip')
 
-    myfile = Path('hostname')
-    if myfile.is_file():
-        os.remove('hostname')
+    if Path(prefix + '/hostname').is_file():
+        os.remove(prefix + '/hostname')
 
-    for id in ids:
-        instance = ec2.Instance(id)
+    with open(prefix + '/public_ip', 'a') as public_ip_file, \
+            open(prefix + '/private_ip', 'a') as private_ip_file, \
+            open(prefix + '/hostname', 'a') as hostname_file:
+        for id in ids:
+            instance = ec2.Instance(id)
 
-        public_ips.append(instance.public_ip_address)
-        private_ips.append(instance.private_ip_address)
-        hostnames.append('ip-' + str(instance.private_ip_address).replace('.', '-'))
+            public_ips.append(instance.public_ip_address)
+            private_ips.append(instance.private_ip_address)
+            hostnames.append('ip-' + str(instance.private_ip_address).replace('.', '-'))
 
-        with open('public_ip', 'a') as public_ip_file, open('private_ip', 'a') as private_ip_file, open('hostname', 'a') as hostname_file:
+
             public_ip_file.write(str(instance.public_ip_address) + '\n')
             private_ip_file.write(str(instance.private_ip_address) + '\n')
             hostname_file.write('ip-' + str(instance.private_ip_address).replace('.', '-') + '\n')
@@ -43,8 +43,8 @@ def getHosts(ids):
     return public_ips, private_ips, hostnames
 
 
-def config_host_alias(ids):
-    public_ips, private_ips, hostnames = getHosts(ids)
+def config_host_alias(ids, prefix='.'):
+    public_ips, private_ips, hostnames = getHosts(ids, prefix)
 
     with open('hosts.old', 'r') as file:
         lines = file.readlines()
@@ -55,7 +55,7 @@ def config_host_alias(ids):
     for i in range(len(private_ips)):
         lines.insert(2, str(private_ips[i])+' '+str(hostnames[i])+'\n')
 
-    with open('hosts', 'w') as file:
+    with open(prefix + '/hosts', 'w') as file:
         for line in lines:
             file.write(line)
 
@@ -64,11 +64,20 @@ def main():
     path_to_instance = sys.argv[1]
     path_to_configure = sys.argv[2]
     path_to_key = sys.argv[3]
+    dir = sys.argv[4]
+
+    if not os.path.isdir(dir):
+        os.makedirs(dir)
 
     # path_to_instance = 'instances/c5.xlarge.json'
     print('starting program')
     instances, ids = aws.launch_instances(path_to_instance, path_to_configure)
-    time.sleep(1)
+    # write ids on file
+    if Path(dir + '/instances_ids').is_file():
+        os.remove(dir + '/instances_ids')
+    with open(dir + '/instances_ids', 'w') as id_file:
+        for id in ids:
+            id_file.write(str(id) + '\n')
 
     cores = instances[0].cpu_options['CoreCount'] * instances[0].cpu_options['ThreadsPerCore']
     total_cores = len(ids) * cores
@@ -79,21 +88,22 @@ def main():
     # - public_ips:     public ips (Warning! The values will change if stop instance)
     # - private_ips:    private ips to be used as hostfile
     # - hosts:          a file to be moved to /etc/hosts
-    config_host_alias(ids)
+    config_host_alias(ids, dir)
 
     # necessary files to run mpi applications
-    files = [
-        {'hosts':                       '~/hosts'},
-        {'hostname':                    '~/hostname'},
-        {'public_ip':                   ' ~/public_ip'},
-        {'private_ip':                  '~/private_ip'},
-        {'instances_ids':               '~/instances_ids'},
-        {'firstscript.sh':              '~/firstscript.sh'},
-        {'ping.sh':                     '~/ping.sh'},
-        {'copy_all.sh':                 '~/copy_all.sh'},
-        {'disable_hyperthreading.sh':   '~/disable_hyperthreading.sh'},
-        {'run_all.sh':                  '~/run_all.sh'},
-        ]
+    files = {
+        dir + '/hosts':                       '/home/ubuntu/hosts',
+        dir + '/hostname':                    '/home/ubuntu/hostname',
+        dir + '/public_ip':                   '/home/ubuntu/public_ip',
+        dir + '/private_ip':                  '/home/ubuntu/private_ip',
+        dir + '/instances_ids':               '/home/ubuntu/instances_ids',
+        'scripts/firstscript.sh':              '/home/ubuntu/firstscript.sh',
+        'scripts/ping.sh':                     '/home/ubuntu/ping.sh',
+        'scripts/copy_all.sh':                 '/home/ubuntu/copy_all.sh',
+        'scripts/disable_hyperthreading.sh':   '/home/ubuntu/disable_hyperthreading.sh',
+        'scripts/run_all.sh':                  '/home/ubuntu/run_all.sh'
+    }
+
     # aws.uploadFiles(ids, path_to_key, files, 'ubuntu')
     aws.transfer_parallel(ids, path_to_key, files)
     # necessary commands to to run mpi applications
@@ -105,7 +115,7 @@ def main():
         'chmod +x copy_all.sh',
         'chmod +x disable_hyperthreading.sh',
         'chmod +x run_all.sh',
-        'sudo ./disable_hyperthreading.sh',
+        # 'sudo ./disable_hyperthreading.sh',
         ]
     # aws.executeCommands(ids, path_to_key, commands)
     aws.execute_parallel(ids, path_to_key, commands)
@@ -113,36 +123,31 @@ def main():
     commands = ['./firstscript.sh']
     aws.execute_commands(ids[:1], path_to_key, commands)
 
-    os.system('scp -qr -i "willkey.pem" ../fwi_src ubuntu@$(cat public_ip | head -n 1):')
-    # n_iterations = 1
-    # print('running fwi with %d processes' % total_cores)
-    # commands = ['./run_fwi.sh ' + str(total_cores) + ' ' + str(n_iterations)]
-    # stdout, stderr = aws.executeCommands(ids[:1], path_to_key, commands)
-    #
-    # with open('test.log', 'w') as filelog:
-    #     for line in stdout:
-    #         filelog.write(str(line))
-    #
+    # POST PROCESS - depends on your application
+
+    n_iterations = 3
+    print('running fwi with %d processes' % total_cores)
+    commands = ['./run_fwi_toydac.sh ']
+    stdout, stderr = aws.execute_commands(ids[:1], path_to_key, commands)
+
+    with open('test.log', 'w') as filelog:
+        for line in stdout:
+            filelog.write(str(line))
+
     # instance_type = os.path.basename(path_to_instance).replace('.json', '')
-    # result_dir = 'results/' + instance_type
-    #
-    # if not os.path.exists(result_dir):
-    #     os.makedirs(result_dir)
-    #
-    # for i in range(1, 3):
-    #     for j in range(1, n_iterations+1):
-    #         remote_path = '/home/ubuntu/inversion_'+str(i)+'_'+str(j)+'.out'
-    #         local_path = result_dir + '/inversion_'+str(i)+'_'+str(j)+'.out'
-    #         aws.downloadFile(ids[0], path_to_key, remote_path, local_path)
-    #
-    #         remote_path = '/home/ubuntu/modeling_'+str(i)+'_'+str(j)+'.out'
-    #         local_path = result_dir + '/modeling_'+str(i)+'_'+str(j)+'.out'
-    #         aws.downloadFile(ids[0], path_to_key, remote_path, local_path)
-    #
-    # os.system('mkdir -p %s' % result_dir+'/pings')
-    # os.system('./get_pings.sh %s' % result_dir+'/pings')
-    #
-    # aws.terminate_instances(ids)
+    result_dir = 'results/' + dir
+    if not os.path.exists(result_dir):
+        os.makedirs(result_dir)
+
+    for i in range(1, 4):
+        remote_path = '/home/ubuntu/inversion_'+str(i)+'.out'
+        local_path = result_dir + '/inversion_'+str(i)+'.out'
+        aws.download_file(ids[0], path_to_key, remote_path, local_path)
+
+    os.system('mkdir -p %s' % result_dir+'/pings')
+    os.system('scripts/get_pings.sh %s' % result_dir+'/pings')
+
+    aws.terminate_instances(ids)
     # time.sleep(20)
 
 

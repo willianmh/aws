@@ -17,7 +17,7 @@ def main():
             ids.append(line.rstrip())
 
     if len(ids) > 0:
-        aws.executeParallel(ids, key, commands)
+        aws.execute_parallel(ids, key, commands)
         time.sleep(1)
 
 

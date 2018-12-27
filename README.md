@@ -97,11 +97,12 @@ You need to define a list with the paths to the files and the IDs of the instanc
 
 ```python
 username = "ubuntu" # AWS use it by default on ubuntu VMs
-files = [
-    {'local_path/file_1': 'remote_path/file_1'}, 
-    {'local_path/file_2': 'remote_path/file_2'}, 
-    {'local_path/file_3': 'remote_path/file_3'}
-    ]
+files = {
+    'local_path/file_1': 'remote_path/file_1', 
+    'local_path/file_2': 'remote_path/file_2', 
+    'local_path/file_3': 'remote_path/file_3'
+    }
+    
 aws.uploadFiles(ids, path_to_key, files, username, n_attempts)
 ```
 

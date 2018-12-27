@@ -45,7 +45,7 @@ setup_ssh_keys() {
 
 set_nfs() {
   mkdir -p shared
-  sudo chown nobody:nogroup ~/shared
+#  sudo chown ubun:nogroup ~/shared
 
   echo "/home/ubuntu/shared *(rw,sync,no_root_squash,no_subtree_check)" | sudo tee -a /etc/exports
   sudo service nfs-kernel-server restart

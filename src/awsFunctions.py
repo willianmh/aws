@@ -28,7 +28,6 @@ import threading
 
 def upload_files(instances_ids, path_to_key, paths_to_files, username='ubuntu', n_attempts=7):
     ec2 = boto3.resource('ec2')
-
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     print('uploading files')
@@ -48,7 +47,8 @@ def upload_files(instances_ids, path_to_key, paths_to_files, username='ubuntu', 
                 ftp_client = ssh_client.open_sftp()
                 for file in paths_to_files:
                     # file = os.path.basename(path_to_file)
-                    ftp_client.put(file, paths_to_files[file])
+                    # ftp_client.put(path_to_file, '/home/ubuntu/'+file)
+                    ftp_client.put(str(file), str(paths_to_files[file]))
                 ftp_client.close()
                 ssh_client.close()
                 print('upload success on %s!' % str(ip))
@@ -209,12 +209,12 @@ def allocate_host(instance_type, quantity, availability_zone, auto_placement, Ta
 def check_placement_group(placement_name):
     ec2 = boto3.resource('ec2')
     placement_groups = list(ec2.placement_groups.all())
-    not_exist = True
+    exist = False
     if len(placement_groups):
         for placement_group in placement_groups:
             if placement_group.group_name == placement_name:
-                not_exist = False
-    return not_exist
+                exist = True
+    return exist
 
 
 def launch_instances(path_to_instance, path_to_file):
@@ -248,22 +248,23 @@ def launch_instances(path_to_instance, path_to_file):
 
     machine_definitions = json.load(open(path_to_instance, 'r'))
 
-    # Configure Placement
-    if 'PlacementType' in cfg['instance']:
-        if cfg['instance']['PlacementType'] == 'placement':  # Configure Placement Group
-            not_exist = check_placement_group(cfg['placement']['Name'])  # Check if placement already exists
-            if not_exist:
+    # Configure Placement & Tenancy
+    if 'Placement' in cfg['instance']:
+        if cfg['instance']['Placement'] == 'True':  # Configure Placement Group
+            if not check_placement_group(cfg['placement']['Name']):  # Check if placement already exists
                 print('creating placement_group: %s' % cfg['placement']['Name'])
                 response = client.create_placement_group(
                     GroupName=cfg['placement']['Name'],
                     Strategy=cfg['placement']['Strategy']
                 )
+                print('placement group %s created!' % cfg['placement']['Name'])
             machine_definitions['Placement']['GroupName'] = cfg['placement']['Name']
 
-        elif cfg['instance']['PlacementType'] == 'tenancy':  # Configure Tenancy
+    if 'Tenancy' in cfg['instance']:  # Configure Tenancy
+        if cfg['instance']['Tenancy'] == 'True':
             machine_definitions['Placement']['Tenancy'] = cfg['tenancy']['Type']
 
-            if cfg['placement']['Type'] == 'host':
+            if cfg['tenancy']['Type'] == 'host':
                 reserved_hosts = client.describe_hosts(
                     HostIds=[
                         cfg['placement']['HostdID']
@@ -298,16 +299,8 @@ def launch_instances(path_to_instance, path_to_file):
     # waiter for status running on each instances
     waiter = client.get_waiter('instance_running')
     waiter.wait(
-        instanceIds=ids
+        InstanceIds=ids
     )
-    # write ids on file
-    my_file = Path('instances_ids')
-    if my_file.is_file():
-        os.remove('instances_ids')
-    with open('instances_ids', 'w') as id_file:
-        for id in ids:
-            id_file.write(str(id) + '\n')
-
     print('instances launched!')
     return instances, ids
 
@@ -377,11 +370,11 @@ def terminate_instances(ids, n_attempts=2):
         try:
             status = True
             response = client.terminate_instances(
-                instance_ids=ids
+                InstanceIds=ids
             )
             waiter = client.get_waiter('instance_terminated')
             waiter.wait(
-                instance_ids=ids
+                InstanceIds=ids
             )
             print('instances terminated')
             break

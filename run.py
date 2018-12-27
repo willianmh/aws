@@ -101,7 +101,7 @@ def main():
         'scripts/ping.sh':                     '/home/ubuntu/ping.sh',
         'scripts/copy_all.sh':                 '/home/ubuntu/copy_all.sh',
         'scripts/disable_hyperthreading.sh':   '/home/ubuntu/disable_hyperthreading.sh',
-        'scripts/run_all.sh':                  '/home/ubuntu/run_all.sh'
+        'scripts/run_fwi_toydac.sh':           '/home/ubuntu/run_fwi_toydac.sh'
     }
 
     # aws.uploadFiles(ids, path_to_key, files, 'ubuntu')
@@ -114,18 +114,19 @@ def main():
         'chmod +x ping.sh',
         'chmod +x copy_all.sh',
         'chmod +x disable_hyperthreading.sh',
-        'chmod +x run_all.sh',
+        'chmod +x run_fwi_toydac.sh',
         # 'sudo ./disable_hyperthreading.sh',
         ]
     # aws.executeCommands(ids, path_to_key, commands)
     aws.execute_parallel(ids, path_to_key, commands)
 
-    commands = ['./firstscript.sh']
+    commands = [
+        './firstscript.sh',
+        './run_fwi_toydac.sh'
+    ]
     aws.execute_commands(ids[:1], path_to_key, commands)
 
     # POST PROCESS - depends on your application
-
-    n_iterations = 3
     print('running fwi with %d processes' % total_cores)
     commands = ['./run_fwi_toydac.sh ']
     stdout, stderr = aws.execute_commands(ids[:1], path_to_key, commands)

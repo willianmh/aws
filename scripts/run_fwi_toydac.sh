@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #source /opt/intel/compilers_and_libraries_2018.3.222/linux/bin/compilervars.sh -arch intel64 -platform linux
-#source /opt/intel/parallel_studio_xe_2018.3.051/bin/psxevars.sh
+source ~/.bashrc
 
 N_ITERATIONS=3
 
@@ -40,7 +40,7 @@ cd ~/
 
 for i in `seq 1 ${N_ITERATIONS}`
 do
-  cd run_marmousi_template
+  cd ~/run_marmousi_template
   echo "inversion"
   mpirun -n 8 \
         -ppn 2 \

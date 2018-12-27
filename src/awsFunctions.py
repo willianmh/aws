@@ -343,11 +343,11 @@ def stop_instances(ids, n_attempts=2):
         try:
             status = True
             response = client.stop_instances(
-                instance_ids=ids
+                InstanceIds=ids
             )
             waiter = client.get_waiter('instance_stopped')
             waiter.wait(
-                instance_ids=ids
+                InstanceIds=ids
             )
             print('instances stopped')
             break

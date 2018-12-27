@@ -267,7 +267,7 @@ def launch_instances(path_to_instance, path_to_file):
             if cfg['tenancy']['Type'] == 'host':
                 reserved_hosts = client.describe_hosts(
                     HostIds=[
-                        cfg['placement']['HostID']
+                        cfg['tenancy']['HostID']
                     ]
                 )['Hosts']
                 if len(reserved_hosts) == 0:

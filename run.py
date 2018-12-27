@@ -122,14 +122,13 @@ def main():
 
     commands = [
         './firstscript.sh',
-        './run_fwi_toydac.sh'
     ]
     aws.execute_commands(ids[:1], path_to_key, commands)
 
     # POST PROCESS - depends on your application
     print('running fwi with %d processes' % total_cores)
     commands = ['./run_fwi_toydac.sh ']
-    stdout, stderr = aws.execute_commands(ids[:1], path_to_key, commands)
+    status, stdout, stderr = aws.execute_commands(ids[:1], path_to_key, commands)
 
     with open('test.log', 'w') as filelog:
         for line in stdout:
